@@ -1,6 +1,6 @@
-"""Step 1: PDF -> teks mentah. Satu file .txt per PDF di data/text/.
+"""Step 1: PDF -> raw text. One .txt file per PDF in data/text/.
 
-Jalankan: python -m ragpdp.extract
+Run: python -m ragpdp.extract
 """
 from pathlib import Path
 

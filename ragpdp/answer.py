@@ -1,4 +1,4 @@
-"""Step 4: jawab pertanyaan dari pasal hasil retrieval, wajib dengan sitasi."""
+"""Step 4: answer questions from retrieved pasal, always with citations."""
 import os
 import re
 from collections.abc import Iterator
@@ -6,7 +6,7 @@ from datetime import date
 
 from openai import OpenAI
 
-from ragpdp.retrieve import Index  # juga memuat .env
+from ragpdp.retrieve import Index  # also loads .env
 
 CHAT_MODEL = os.getenv("CHAT_MODEL", "qwen3.5:4b")
 REASONING_EFFORT = os.getenv("CHAT_REASONING_EFFORT", "none")
@@ -14,11 +14,11 @@ client = OpenAI(
     base_url=os.getenv("CHAT_BASE_URL", "http://localhost:11434/v1"),
     api_key=os.getenv("CHAT_API_KEY", "ollama"),
 )
-PP_BERLAKU = date(2027, 1, 16)  # PP 33/2026 Pasal 225: berlaku 6 bulan sejak diundangkan 16 Juli 2026
+PP_BERLAKU = date(2027, 1, 16)  # PP 33/2026 Pasal 225: in force 6 months after promulgation on 16 July 2026
 _DOC = r"(UU(?: No\.?)? 27(?:/| Tahun )2022|PP(?: No\.?)? 33(?:/| Tahun )2026)"
 _DETAIL = r"(?i:(?: ayat \(\d+\))?(?: huruf [a-z])?)"
-# Model kecil tidak selalu patuh format: selain "[UU 27/2022 Pasal 4 ayat (1)]" juga menulis
-# "Pasal 4 ayat (1) UU No. 27 Tahun 2022". Dua-duanya harus dicek, kalau tidak halusinasi lolos.
+# Small models do not always follow the format: besides "[UU 27/2022 Pasal 4 ayat (1)]" they also write
+# "Pasal 4 ayat (1) UU No. 27 Tahun 2022". Both must be checked, otherwise hallucinations slip through.
 CITE = re.compile(rf"\[?{_DOC} Pasal (\d+){_DETAIL}\]?|Pasal (\d+){_DETAIL} {_DOC}")
 
 SYSTEM = """Kamu asisten yang membantu orang awam memahami UU 27/2022 tentang Pelindungan Data Pribadi (UU PDP) dan PP 33/2026 (peraturan pelaksanaan UU PDP).
@@ -55,17 +55,17 @@ def context(hits: list[dict]) -> str:
 
 
 def answer(idx: Index, question: str, history: list[dict] = ()) -> tuple[list[dict], Iterator[str]]:
-    """Return (pasal sumber, stream potongan jawaban). `history` = pesan sebelumnya [{role, content}]."""
+    """Return (source pasal, stream of answer chunks). `history` = previous messages [{role, content}]."""
     prev = [m["content"] for m in history if m["role"] == "user"][-1:]
-    # Pertanyaan lanjutan ("terus sanksinya apa?") butuh topik pertanyaan sebelumnya untuk retrieval.
+    # Follow-up questions ("terus sanksinya apa?") need the previous question's topic for retrieval.
     hits = idx.with_refs(idx.search(" ".join(prev + [question])))
     messages = [
         {"role": "system", "content": SYSTEM.format(status_pp=status_pp(date.today()))},
         *history,
         {"role": "user", "content": f"KONTEKS (dicari otomatis oleh sistem, tidak terlihat oleh pengguna):\n{context(hits)}\n\nPERTANYAAN PENGGUNA: {question}"},
     ]
-    # Thinking memperlambat tanpa banyak manfaat untuk Q&A pendek. Nilai terendah beda per provider:
-    # Ollama/qwen3.5 menerima "none", Gemini Flash-Lite menolak "none" dan memakai "minimal".
+    # Thinking slows things down with little benefit for short Q&A. The lowest value differs per provider:
+    # Ollama/qwen3.5 accepts "none", Gemini Flash-Lite rejects "none" and uses "minimal".
     stream = client.chat.completions.create(
         model=CHAT_MODEL, messages=messages, stream=True, temperature=0.1, reasoning_effort=REASONING_EFFORT
     )
@@ -73,7 +73,7 @@ def answer(idx: Index, question: str, history: list[dict] = ()) -> tuple[list[di
 
 
 def citations(text: str) -> list[str]:
-    """Pasal yang disitasi di jawaban, dinormalisasi jadi 'UU 27/2022 Pasal N'."""
+    """Pasal cited in the answer, normalized to 'UU 27/2022 Pasal N'."""
     return [
         f"{'UU 27/2022' if (d1 or d2).startswith('UU') else 'PP 33/2026'} Pasal {n1 or n2}"
         for d1, n1, n2, d2 in CITE.findall(text)
@@ -81,6 +81,6 @@ def citations(text: str) -> list[str]:
 
 
 def invalid_citations(text: str, hits: list[dict]) -> list[str]:
-    """Sitasi di jawaban yang tidak ada di pasal sumber = kemungkinan halusinasi."""
+    """Citations in the answer that are not among the source pasal = likely hallucination."""
     allowed = {label(c) for c in hits}
     return [c for c in citations(text) if c not in allowed]

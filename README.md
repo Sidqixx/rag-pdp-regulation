@@ -1,87 +1,95 @@
 # Tanya UU PDP
 
-Chatbot RAG yang membantu orang awam memahami **UU 27/2022 tentang Pelindungan Data Pribadi** dan **PP 33/2026** (peraturan pelaksanaannya). Setiap jawaban menyebut pasal sumbernya, dan sitasi yang tidak ada di sumber otomatis ditandai.
+A RAG chatbot that helps laypeople understand Indonesia's personal data protection law: **UU 27/2022 (Pelindungan Data Pribadi)** and its implementing regulation **PP 33/2026**. Every answer cites the article (*pasal*) it is based on, and citations that do not appear in the retrieved sources are flagged automatically.
 
-> Bukan nasihat hukum. Percakapan tidak disimpan. Versi online memproses pertanyaan lewat API LLM pihak ketiga; untuk penggunaan yang sepenuhnya offline, jalankan versi lokal (Ollama).
+The UI and answers are in Indonesian, since the target users are Indonesian.
 
-## Cara kerja
+> Not legal advice. Conversations are not stored. The online version sends questions to a third-party LLM API; for fully offline use, run the local version (Ollama).
 
-1. **Ingestion:** PDF resmi → teks (`pymupdf`) → 1 chunk per Pasal, lengkap dengan Penjelasan dan daftar pasal yang dirujuk.
-2. **Retrieval:** embedding + cosine similarity (menang telak atas BM25 dan hybrid di eval, lihat tabel), pasal yang disebut eksplisit diambil langsung, lalu pasal yang dirujuk ikut ditarik. Embedding: `gemini-embedding-2` (online) atau `bge-m3` lokal (offline).
-3. **Generation:** LLM menjawab hanya dari pasal hasil retrieval, dengan format sitasi `[UU 27/2022 Pasal N]` yang dicek ulang di kode. Dua mode: **Gemini Flash-Lite** (API free tier, cepat) atau **qwen3.5:4b lokal via Ollama** (100% offline).
-4. **Evaluasi:** 50 pertanyaan berbahasa awam beserta pasal yang benar.
+## How it works
 
-## Hasil evaluasi
+1. **Ingestion:** official PDFs → text (`pymupdf`) → one chunk per article, together with its official elucidation (*Penjelasan*) and the list of articles it references.
+2. **Retrieval:** embeddings + cosine similarity (clearly beats BM25 and hybrid in the evaluation below). Articles mentioned by number ("Pasal 57") are fetched directly, and articles referenced by the top hits are pulled in. Embeddings: `gemini-embedding-2` (online) or local `bge-m3` (offline).
+3. **Generation:** the LLM answers only from the retrieved articles, using a fixed citation format (`[UU 27/2022 Pasal N]`) that is verified in code. Two modes: **Gemini Flash-Lite** (free-tier API, fast) or **local qwen3.5:4b via Ollama** (fully offline).
+4. **Evaluation:** 50 questions written in everyday Indonesian, each labeled with the correct articles.
 
-50 pertanyaan berbahasa awam (44 di lingkup UU/PP, 6 di luar lingkup), `eval/questions.jsonl`.
+## Evaluation
+
+50 questions (44 answerable from UU/PP, 6 out of scope), see `eval/questions.jsonl`. The labels were reviewed manually.
 
 **Retrieval** (`python -m ragpdp.evaluate`):
 
-| Metode | recall@5 | recall@8 | MRR |
+| Method | recall@5 | recall@8 | MRR |
 |---|---|---|---|
 | BM25 | 0.500 | 0.530 | 0.374 |
 | Hybrid (BM25 + bge-m3, RRF) | 0.686 | 0.754 | 0.599 |
-| Embedding `bge-m3` (lokal) | 0.833 | 0.924 | 0.766 |
+| Embedding `bge-m3` (local) | 0.833 | 0.924 | 0.766 |
 | Hybrid (BM25 + gemini-embedding-2, RRF) | 0.712 | 0.777 | 0.635 |
 | **Embedding `gemini-embedding-2` (online)** | **0.951** | **0.981** | **0.860** |
 
-Hybrid kalah dari embedding saja dengan kedua model: pertanyaan orang awam jarang memakai kata yang sama dengan teks pasal, jadi BM25 malah menambah noise.
+Hybrid search loses to pure embeddings with both models: laypeople rarely use the same words as the legal text, so BM25 mostly adds noise.
 
-**Jawaban** (`python -m ragpdp.evaluate --answers`, semuanya memakai retrieval `bge-m3`):
+**Answers** (`python -m ragpdp.evaluate --answers`, all runs used `bge-m3` retrieval):
 
-| Metrik | **Gemini 3.5 Flash-Lite (API)** | qwen3.5:4b (lokal) | qwen3.5:2b (lokal) |
+| Metric | **Gemini 3.5 Flash-Lite (API)** | qwen3.5:4b (local) | qwen3.5:2b (local) |
 |---|---|---|---|
-| Jawaban dengan sitasi | **43/44** | 38/44 | 37/44 |
-| Menyitasi pasal yang benar | **41/44** | 35/44 | 27/44 |
-| Ada sitasi halusinasi (ditandai merah di UI) | **0/44** | 2/44 | 6/44 |
-| Menolak pertanyaan di luar lingkup | **6/6** | 6/6 | 2/6 |
-| Waktu jawaban lengkap | **±15 detik** | ±45–55 detik | ±20–25 detik |
+| Answers with a citation | **43/44** | 38/44 | 37/44 |
+| Cites a correct article | **41/44** | 35/44 | 27/44 |
+| Contains a hallucinated citation (flagged red in the UI) | **0/44** | 2/44 | 6/44 |
+| Refuses out-of-scope questions | **6/6** | 6/6 | 2/6 |
+| Full answer time | **~15 s** | ~45–55 s | ~20–25 s |
 
-Model lokal diukur di GTX 1650 4GB. Angka 2b berasal dari prompt versi sebelumnya (dihitung ulang dengan pengecek sitasi yang sama). Hasil LLM bervariasi antar-run: run 4b sebelumnya mendapat 38/44 pasal benar tetapi 4/6 penolakan, jadi selisih ±3 pertanyaan masih dalam batas noise.
+Local models were measured on a GTX 1650 (4 GB). The 2b numbers come from an earlier prompt version (re-scored with the same citation checker). LLM output varies between runs: an earlier 4b run scored 38/44 correct articles but 4/6 refusals, so differences of about ±3 questions are within noise.
 
-## Menjalankan
+## Running locally
 
-Butuh Python 3.12+ dan [Ollama](https://ollama.com). Set env `OLLAMA_CONTEXT_LENGTH=8192` sebelum Ollama dinyalakan; default 4096 terlalu kecil dan prompt akan terpotong diam-diam.
+Requires Python 3.12+.
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m uvicorn ragpdp.app:app --port 8000   # open http://localhost:8000
+```
+
+**Online mode (Gemini):** copy `.env.example` to `.env` and fill in a free API key from [Google AI Studio](https://aistudio.google.com). Chat (`CHAT_*`) and embeddings (`EMBED_*`) are configured separately. `.env` is git-ignored.
+
+**Offline mode (Ollama):** without a `.env`, chat and embeddings run on [Ollama](https://ollama.com):
 
 ```powershell
 ollama pull bge-m3
 ollama pull qwen3.5:4b
-
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-
-.venv\Scripts\python.exe -m uvicorn ragpdp.app:app --port 8000   # buka http://localhost:8000
 ```
 
-Membangun ulang data dan mengukur (pakai `.venv\Scripts\python.exe`):
+Set `OLLAMA_CONTEXT_LENGTH=8192` before starting Ollama. The default of 4096 is too small, and longer prompts get truncated silently.
+
+Rebuilding the data and measuring:
 
 ```powershell
 python -m ragpdp.extract              # PDF -> data/text/*.txt
-python -m ragpdp.parse                # teks -> data/chunks.jsonl
+python -m ragpdp.parse                # text -> data/chunks.jsonl
 python -m pytest
 python -m ragpdp.evaluate             # retrieval
-python -m ragpdp.evaluate --answers   # jawaban LLM (lama: ±50 jawaban)
+python -m ragpdp.evaluate --answers   # LLM answers (slow: 50 answers)
 ```
 
-Ganti provider (mis. Gemini free tier untuk deploy): salin `.env.example` jadi `.env` lalu isi API key. Chat (`CHAT_BASE_URL`, `CHAT_API_KEY`, `CHAT_MODEL`) dan embedding (`EMBED_BASE_URL`, `EMBED_API_KEY`, `EMBED_MODEL`) dikonfigurasi terpisah. `.env` tidak ikut di-commit.
+## Deploying for free (Vercel)
 
-## Deploy gratis (Render)
+Vercel runs the FastAPI app as-is (root `app.py` is the entrypoint) on the free Hobby plan. The embedding cache (`data/emb-*.npy`) is committed, so the server never has to embed all 301 articles at startup.
 
-`render.yaml` mendefinisikan web service Python di free tier Render (512 MB RAM, tidur setelah 15 menit tanpa pengunjung, bangun lagi ±1 menit). Cache embedding (`data/emb-*.npy`) ikut di-commit, jadi server tidak perlu meng-embed 301 pasal saat start.
+1. Push this repo to GitHub.
+2. In [Vercel](https://vercel.com/new), import the repository.
+3. Under **Environment Variables**, paste the contents of your `.env`, then **Deploy**.
 
-1. Push repo ini ke GitHub.
-2. Di [dashboard Render](https://dashboard.render.com): **New → Blueprint**, pilih repo ini.
-3. Isi `CHAT_API_KEY` dan `EMBED_API_KEY` dengan API key Gemini (nilainya sama), lalu **Apply**.
-
-## Struktur
+## Project layout
 
 ```
-data/raw/          PDF resmi
-data/text/         hasil extract
-data/chunks.jsonl  1 baris = 1 pasal (+ penjelasan, rujukan)
-data/emb-*.npy     cache embedding per model
+app.py             Vercel entrypoint
+data/raw/          official PDFs
+data/text/         extracted text
+data/chunks.jsonl  one line = one article (+ elucidation, references)
+data/emb-*.npy     embedding cache per model
 ragpdp/            extract, parse, retrieve, answer, evaluate, app
-web/index.html     UI chat
-eval/              pertanyaan uji + jawaban model
-docs/LEARNING.md   peta belajar, keputusan desain, log
+web/index.html     chat UI
+eval/              test questions + model answers
+docs/LEARNING.md   study guide, design decisions, log (Indonesian)
 ```

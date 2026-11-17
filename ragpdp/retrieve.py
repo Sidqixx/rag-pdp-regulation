@@ -1,6 +1,6 @@
-"""Step 3: cari pasal yang relevan.
+"""Step 3: find relevant pasal.
 
-Default: embedding (makna). BM25 (kata persis) dan hybrid (RRF) tetap ada untuk perbandingan di evaluate.py.
+Default: embedding (meaning). BM25 (exact words) and hybrid (RRF) remain for comparison in evaluate.py.
 """
 import hashlib
 import json
@@ -16,15 +16,15 @@ from rank_bm25 import BM25Okapi
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# .env (tidak di-commit) berisi API key & pilihan provider. Env yang sudah di-set di terminal tetap menang.
+# .env (not committed) holds API keys & provider choice. Env vars already set in the terminal still win.
 if (ROOT / ".env").exists():
     for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
         if "=" in line and not line.lstrip().startswith("#"):
             key, value = line.split("=", 1)
             os.environ.setdefault(key.strip(), value.strip())
 
-# Ollama, Gemini, Groq, dll. sama-sama menyediakan API format OpenAI: ganti provider cukup lewat env.
-# Embedding dan chat dikonfigurasi terpisah (lihat answer.py), jadi bisa beda provider.
+# Ollama, Gemini, Groq, etc. all expose an OpenAI-format API: switching provider is just env vars.
+# Embedding and chat are configured separately (see answer.py), so they can use different providers.
 EMBED_MODEL = os.getenv("EMBED_MODEL", "bge-m3")
 embed_client = OpenAI(
     base_url=os.getenv("EMBED_BASE_URL", "http://localhost:11434/v1"),
@@ -37,7 +37,7 @@ STOPWORDS = set(
     "bisa boleh harus ada tidak gak nggak ga enggak sih ya dong kah lah nya juga sudah udah mau "
     "berapa kapan siapa mana".split()
 )
-RRF_K = 60  # konstanta standar dari paper RRF
+RRF_K = 60  # standard constant from the RRF paper
 PASAL_DISEBUT = re.compile(r"\bpasal\s+(\d+)", re.I)
 
 
@@ -46,7 +46,7 @@ def tokenize(s: str) -> list[str]:
 
 
 def doc_text(c: dict) -> str:
-    """Teks yang di-index: label + BAB + isi + penjelasan."""
+    """Indexed text: label + BAB + body + penjelasan."""
     return f"{c['source']} Pasal {c['pasal']} - {c['bab']}\n{c['text']}\nPenjelasan: {c['penjelasan']}"
 
 
@@ -57,18 +57,18 @@ def embed(texts: list[str], wait_on_limit: bool = False) -> np.ndarray:
             try:
                 res = embed_client.embeddings.create(model=EMBED_MODEL, input=texts[i : i + 32])
                 break
-            except RateLimitError:  # free tier Gemini: 100 teks/menit
+            except RateLimitError:  # Gemini free tier: 100 texts/minute
                 if not wait_on_limit or attempt == 5:
                     raise
                 time.sleep(20)
         vecs += [d.embedding for d in res.data]
     v = np.array(vecs, dtype=np.float32)
-    return v / np.linalg.norm(v, axis=1, keepdims=True)  # normalisasi -> dot product = cosine similarity
+    return v / np.linalg.norm(v, axis=1, keepdims=True)  # normalize -> dot product = cosine similarity
 
 
 @lru_cache(maxsize=1024)
 def embed_query(query: str) -> np.ndarray:
-    """Pertanyaan yang sama tidak di-embed ulang (hemat kuota API, mis. di evaluate.py)."""
+    """Identical questions are not re-embedded (saves API quota, e.g. in evaluate.py)."""
     return embed([query])[0]
 
 
@@ -78,13 +78,13 @@ class Index:
         self.by_id = {c["id"]: c for c in chunks}
         docs = [doc_text(c) for c in chunks]
         self.bm25 = BM25Okapi([tokenize(d) for d in docs])
-        # Cache embedding: nama file memuat hash isi, jadi otomatis dihitung ulang kalau chunk/model berubah.
+        # Embedding cache: the file name includes a content hash, so it is recomputed when chunks/model change.
         h = hashlib.sha1((EMBED_MODEL + "".join(docs)).encode()).hexdigest()[:10]
         cache = ROOT / "data" / f"emb-{re.sub(r'\W', '_', EMBED_MODEL)}-{h}.npy"
         if cache.exists():
             self.emb = np.load(cache)
         else:
-            self.emb = embed(docs, wait_on_limit=True)  # 301 pasal sekaligus: bisa kena limit per menit
+            self.emb = embed(docs, wait_on_limit=True)  # 301 pasal at once: may hit the per-minute limit
             np.save(cache, self.emb)
 
     @classmethod
@@ -93,7 +93,7 @@ class Index:
             return cls([json.loads(line) for line in f])
 
     def rank(self, query: str, method: str = "embed") -> list[int]:
-        """Urutan indeks chunk dari paling relevan. Default embedding: BM25 & hybrid kalah di eval (lihat README)."""
+        """Chunk indices ordered by relevance. Embedding is the default: BM25 & hybrid lost in eval (see README)."""
         if method == "bm25":
             return list(np.argsort(-self.bm25.get_scores(tokenize(query))))
         if method == "embed":
@@ -105,15 +105,15 @@ class Index:
         return list(np.argsort(-score))
 
     def search(self, query: str, k: int = 8, method: str = "embed") -> list[dict]:
-        # Pasal yang disebut eksplisit ("isi Pasal 20 PP?") langsung diambil; embedding lemah untuk nomor.
+        # Explicitly named pasal ("isi Pasal 20 PP?") are fetched directly; embeddings are weak on numbers.
         docs = ["pp33"] if re.search(r"\bPP\b", query, re.I) else ["uu27"] if re.search(r"\bUU\b", query, re.I) else ["uu27", "pp33"]
         named = [self.by_id[f"{d}:{n}"] for n in PASAL_DISEBUT.findall(query) for d in docs if f"{d}:{n}" in self.by_id]
         ranked = [self.chunks[i] for i in self.rank(query, method)[:k]]
         return named + [c for c in ranked if c not in named][: max(0, k - len(named))]
 
     def with_refs(self, hits: list[dict], max_extra: int = 3) -> list[dict]:
-        """Tambah pasal yang dirujuk hasil pencarian, supaya LLM tahu isi 'sebagaimana dimaksud dalam Pasal X'.
-        Pasal yang merujuk >3 pasal (mis. daftar sanksi) dilewati: terlalu banyak untuk konteks."""
+        """Add pasal referenced by the search hits, so the LLM knows what 'sebagaimana dimaksud dalam Pasal X' means.
+        Pasal referencing >3 pasal (e.g. sanction lists) are skipped: too much for the context."""
         seen = {c["id"] for c in hits}
         extra = []
         for c in hits:
