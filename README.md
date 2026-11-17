@@ -1,5 +1,7 @@
 # Tanya UU PDP
 
+**Live demo:** https://rag-pdp-regulation.vercel.app/
+
 A RAG chatbot that helps laypeople understand Indonesia's personal data protection law: **UU 27/2022 (Pelindungan Data Pribadi)** and its implementing regulation **PP 33/2026**. Every answer cites the article (*pasal*) it is based on, and citations that do not appear in the retrieved sources are flagged automatically.
 
 The UI and answers are in Indonesian, since the target users are Indonesian.
