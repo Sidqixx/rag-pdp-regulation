@@ -20,6 +20,25 @@ _DETAIL = r"(?i:(?: ayat \(\d+\))?(?: huruf [a-z])?)"
 # Small models do not always follow the format: besides "[UU 27/2022 Pasal 4 ayat (1)]" they also write
 # "Pasal 4 ayat (1) UU No. 27 Tahun 2022". Both must be checked, otherwise hallucinations slip through.
 CITE = re.compile(rf"\[?{_DOC} Pasal (\d+){_DETAIL}\]?|Pasal (\d+){_DETAIL} {_DOC}")
+# Models also group citations: "[UU 27/2022 Pasal 38, Pasal 57]". Mirrored in web/index.html (splitGroups).
+_GROUP = re.compile(r"\[(UU 27/2022|PP 33/2026) (Pasal [^\[\]]+)\]")
+
+
+def split_groups(text: str) -> str:
+    """'[UU 27/2022 Pasal 38, Pasal 57]' -> '[UU 27/2022 Pasal 38] [UU 27/2022 Pasal 57]' so every pasal is checked."""
+
+    def repl(m: re.Match) -> str:
+        doc, inner = m.groups()
+        parts: list[str] = []
+        for p in re.split(r",\s*|\s+dan\s+", inner):
+            if p.startswith("Pasal ") or not parts:
+                parts.append(p)
+            else:  # "ayat (2)" belongs to the previous pasal
+                parts[-1] += " dan " + p
+        return " ".join(f"[{doc} {p}]" for p in parts)
+
+    return _GROUP.sub(repl, text)
+
 
 SYSTEM = """Kamu asisten yang membantu orang awam memahami UU 27/2022 tentang Pelindungan Data Pribadi (UU PDP) dan PP 33/2026 (peraturan pelaksanaan UU PDP).
 
@@ -76,7 +95,7 @@ def citations(text: str) -> list[str]:
     """Pasal cited in the answer, normalized to 'UU 27/2022 Pasal N'."""
     return [
         f"{'UU 27/2022' if (d1 or d2).startswith('UU') else 'PP 33/2026'} Pasal {n1 or n2}"
-        for d1, n1, n2, d2 in CITE.findall(text)
+        for d1, n1, n2, d2 in CITE.findall(split_groups(text))
     ]
 
 

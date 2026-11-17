@@ -4,106 +4,351 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tanya UU PDP</title>
+<meta name="description" content="Tanya jawab UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026, lengkap dengan pasal sumbernya.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' shape-rendering='crispEdges'%3E%3Cpath fill='%233a4cff' d='M3 0h4v1H3zM2 1h1v3H2zM7 1h1v3H7zM1 4h8v6H1z'/%3E%3Cpath fill='%23fff' d='M4 6h2v2H4z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
-  :root { --bg:#f7f7f5; --fg:#1c1c1c; --muted:#666; --card:#fff; --border:#ddd; --accent:#0b5cad; --bad:#b3261e; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#151515; --fg:#eee; --muted:#aaa; --card:#1f1f1f; --border:#333; --accent:#6fb1ff; --bad:#ff8a80; } }
+  :root {
+    --bg: #f4efe4; --grid: #e6dfcf; --card: #fffdf8; --ink: #1d1b26; --muted: #5f5a6b;
+    --accent: #3a4cff; --accent-ink: #ffffff; --accent2: #ff6b35; --bad: #d7263d; --shadow: #1d1b26;
+    --ui: "Pixelify Sans", ui-monospace, monospace;
+    --body: "IBM Plex Mono", ui-monospace, monospace;
+    --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14131c; --grid: #1e1d29; --card: #1f1e2b; --ink: #ece8dd; --muted: #a6a1b5;
+      --accent: #8b97ff; --accent-ink: #14131c; --accent2: #ff8a5c; --bad: #ff5d73; --shadow: #050508;
+    }
+  }
   * { box-sizing: border-box; }
-  body { margin:0; font:16px/1.55 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
-  main { max-width:760px; margin:0 auto; padding:16px; display:flex; flex-direction:column; min-height:100vh; }
-  header h1 { font-size:1.4rem; margin:8px 0 4px; }
-  header p { margin:0 0 12px; color:var(--muted); font-size:.9rem; }
-  #log { flex:1; display:flex; flex-direction:column; gap:12px; }
-  .msg { padding:12px 14px; border-radius:10px; background:var(--card); border:1px solid var(--border); white-space:pre-wrap; }
-  .user { align-self:flex-end; background:var(--accent); color:#fff; border:none; max-width:85%; }
-  .cite { font-size:.85em; padding:0 4px; border-radius:4px; border:1px solid var(--accent); color:var(--accent); text-decoration:none; white-space:nowrap; }
-  .cite.bad { border-color:var(--bad); color:var(--bad); text-decoration:line-through; }
-  .sources { margin-top:10px; white-space:normal; font-size:.9rem; }
-  details { border-top:1px solid var(--border); padding:6px 0; }
-  summary { cursor:pointer; color:var(--accent); }
-  details div { white-space:pre-wrap; color:var(--fg); margin-top:6px; }
-  details .pj { color:var(--muted); }
-  #examples { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
-  #examples button, form button { font:inherit; border:1px solid var(--border); background:var(--card); color:var(--fg); border-radius:999px; padding:6px 12px; cursor:pointer; }
-  form { display:flex; gap:8px; position:sticky; bottom:0; padding:12px 0; background:var(--bg); }
-  form input { flex:1; font:inherit; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--fg); }
-  form button { border-radius:10px; background:var(--accent); color:#fff; border:none; }
-  form button:disabled { opacity:.5; }
+  html { scroll-padding-bottom: 160px; }
+  body {
+    margin: 0; color: var(--ink); font: 15px/1.65 var(--body);
+    background-color: var(--bg);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px dashed var(--accent2); outline-offset: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .px-icon { shape-rendering: crispEdges; }
+
+  /* Pixel building blocks: hard borders and offset shadows, no rounded corners. */
+  .box { background: var(--card); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--shadow); }
+  .px-btn {
+    font: 600 14px/1 var(--ui); letter-spacing: .02em; padding: 8px 12px; cursor: pointer;
+    background: var(--card); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--shadow);
+    transition: transform .08s steps(2), box-shadow .08s steps(2);
+  }
+  .px-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow); }
+  .px-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow); }
+
+  header.top {
+    width: 100%; max-width: 820px; margin: 0 auto; padding: 18px 16px 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo { width: 44px; height: 44px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--shadow); }
+  .brand h1 { margin: 0; font: 700 26px/1 var(--ui); letter-spacing: .04em; }
+  .brand p { margin: 4px 0 0; font: 14px/1.2 var(--ui); color: var(--muted); }
+  nav { display: flex; gap: 10px; }
+
+  main { flex: 1; width: 100%; max-width: 820px; margin: 0 auto; padding: 8px 16px 16px; }
+  .welcome { padding: 20px; margin-top: 12px; animation: drop .35s steps(5) both; }
+  .welcome h2 { margin: 0 0 8px; font: 700 22px/1.2 var(--ui); }
+  .welcome p { margin: 0 0 10px; }
+  .note { font-size: 13px; color: var(--muted); border-left: 4px solid var(--accent2); padding-left: 10px; }
+  #examples { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  #examples .px-btn { font: 400 14px/1.3 var(--ui); text-align: left; padding: 8px 10px; }
+
+  #log { display: flex; flex-direction: column; gap: 18px; padding-top: 16px; }
+  .msg { animation: drop .3s steps(4) both; }
+  .msg.user {
+    align-self: flex-end; max-width: 85%; padding: 10px 14px; white-space: pre-wrap;
+    background: var(--accent); color: var(--accent-ink); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .msg.bot { padding: 14px 16px 16px; }
+  .who { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font: 600 13px/1 var(--ui); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .status { margin: 0; font: 15px var(--ui); color: var(--muted); }
+  .cursor { display: inline-block; width: .6em; height: 1em; margin-left: 4px; vertical-align: -2px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  .answer p { margin: 0 0 10px; }
+  .answer h3 { margin: 14px 0 6px; font: 700 17px/1.3 var(--ui); }
+  .answer ul, .answer ol { margin: 0 0 10px; padding-left: 22px; }
+  .answer ul { list-style: square; }
+  .answer li { margin: 3px 0; }
+  .answer li.lv1 { margin-left: 18px; } .answer li.lv2 { margin-left: 36px; }
+  .answer code { font: inherit; background: var(--grid); padding: 0 4px; }
+  .answer em { color: var(--muted); }
+  .stopped { color: var(--muted); font: 14px var(--ui); }
+
+  .cite {
+    display: inline-block; font: 600 12px/1.4 var(--ui); padding: 0 5px; margin: 0 1px; white-space: nowrap;
+    color: var(--accent); border: 2px solid var(--accent); text-decoration: none; background: var(--card);
+  }
+  a.cite:hover { background: var(--accent); color: var(--accent-ink); }
+  .cite.bad { color: var(--bad); border-color: var(--bad); text-decoration: line-through; cursor: help; }
+
+  .sources { margin-top: 14px; padding-top: 10px; border-top: 3px dashed var(--grid); }
+  .sources > strong { display: block; font: 700 14px var(--ui); margin-bottom: 4px; }
+  details { border-bottom: 2px solid var(--grid); padding: 6px 0; }
+  details:last-child { border-bottom: 0; }
+  summary { cursor: pointer; font: 600 14px/1.4 var(--ui); color: var(--accent); }
+  details[open] > summary { color: var(--ink); }
+  details .pasal { white-space: pre-wrap; font-size: 13px; margin-top: 8px; padding: 10px; background: var(--bg); border: 2px solid var(--grid); }
+  details .pj { color: var(--muted); }
+
+  /* Composer: collapsed pill that springs open, modeled on the 21st.dev ai-chat-input. */
+  .dock { position: sticky; bottom: 0; padding: 18px 16px 12px; background: linear-gradient(transparent, var(--bg) 35%); }
+  .composer {
+    position: relative; margin: 0 auto; max-width: 340px;
+    background: var(--card); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--shadow);
+    transition: max-width .4s var(--spring), box-shadow .2s;
+  }
+  .composer.expanded { max-width: 788px; }
+  .composer:focus-within { box-shadow: 4px 4px 0 var(--accent); }
+  .composer .collapsed {
+    display: block; width: 100%; text-align: left; cursor: text; background: none; border: 0;
+    padding: 14px 60px 14px 16px; font: 600 15px/1.2 var(--ui); color: var(--muted);
+  }
+  .composer textarea, .composer .bar { display: none; }
+  .composer.expanded .collapsed { display: none; }
+  .composer.expanded textarea {
+    display: block; width: 100%; height: 64px; min-height: 64px; max-height: 168px; resize: none; overflow-y: auto;
+    border: 0; outline: none; background: none; color: var(--ink);
+    padding: 14px 60px 4px 16px; font: 15px/1.5 var(--body);
+    transition: height .15s ease-out; animation: pop .35s var(--spring) both;
+  }
+  .composer textarea::placeholder { color: var(--muted); font-family: var(--ui); font-weight: 600; }
+  .composer.expanded .bar {
+    display: flex; align-items: center; gap: 10px; padding: 2px 60px 10px 16px;
+    font: 13px var(--ui); color: var(--muted); animation: pop .35s var(--spring) both;
+  }
+  .bar .tag { border: 2px solid var(--grid); padding: 0 6px; }
+  #send {
+    position: absolute; right: 8px; bottom: 8px; width: 38px; height: 38px; padding: 0; cursor: pointer;
+    display: grid; place-items: center; background: var(--accent); color: var(--accent-ink);
+    border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--shadow);
+  }
+  #send:disabled { background: var(--grid); color: var(--muted); cursor: default; box-shadow: none; }
+  #send svg { grid-area: 1 / 1; transition: transform .3s var(--spring), opacity .2s; }
+  #send .i-stop { opacity: 0; transform: scale(.4) rotate(45deg); }
+  #send[data-state="stop"] { background: var(--accent2); }
+  #send[data-state="stop"] .i-send { opacity: 0; transform: scale(.4) rotate(-45deg); }
+  #send[data-state="stop"] .i-stop { opacity: 1; transform: none; }
+  .hint { margin: 8px auto 0; max-width: 788px; text-align: center; font: 12px var(--ui); color: var(--muted); }
+
+  dialog { max-width: 620px; width: calc(100% - 32px); padding: 0; color: var(--ink); }
+  dialog::backdrop { background: rgb(20 19 28 / .55); }
+  dialog .inner { padding: 20px 22px; max-height: 80vh; overflow-y: auto; }
+  dialog h2 { margin: 0 0 10px; font: 700 22px var(--ui); }
+  dialog h3 { margin: 16px 0 6px; font: 700 16px var(--ui); }
+  dialog p, dialog li { font-size: 14px; }
+  dialog ul { padding-left: 20px; list-style: square; }
+  dialog a { color: var(--accent); }
+  dialog .actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+  dialog .actions a { text-decoration: none; color: var(--ink); }
+
+  @keyframes drop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  @media (max-width: 560px) { .brand h1 { font-size: 21px; } .brand p { display: none; } .msg.user { max-width: 92%; } }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Tanya UU PDP</h1>
-    <p>Penjelasan UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026, lengkap dengan pasal sumbernya. Bukan nasihat hukum. Jangan masukkan data pribadi (NIK, nomor HP, dll.): pertanyaan bisa diproses layanan AI pihak ketiga.</p>
-  </header>
-  <div id="examples">
-    <button type="button">Data pribadi apa aja yang dianggap sensitif?</button>
-    <button type="button">Kalau data gua bocor, perusahaan wajib ngapain?</button>
-    <button type="button">Apa sanksinya kalau jual beli data pribadi?</button>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg class="px-icon" width="24" height="24" viewBox="0 0 10 10"><path fill="currentColor" d="M3 0h4v1H3zM2 1h1v3H2zM7 1h1v3H7zM1 4h8v6H1z"/><path fill="var(--accent)" d="M4 6h2v2H4z"/></svg>
+    </div>
+    <div>
+      <h1>TANYA UU PDP</h1>
+      <p>UU 27/2022 &amp; PP 33/2026, lengkap dengan pasalnya</p>
+    </div>
   </div>
+  <nav>
+    <button type="button" id="reset" class="px-btn">Chat baru</button>
+    <button type="button" id="about-open" class="px-btn">Tentang</button>
+  </nav>
+</header>
+
+<main>
+  <section id="welcome" class="box welcome">
+    <h2>Halo! Mau tanya apa soal data pribadi?</h2>
+    <p>Asisten ini menjelaskan UU Pelindungan Data Pribadi dan peraturan pelaksanaannya dengan bahasa sederhana. Setiap jawaban menyebut pasal sumbernya, dan pasal itu bisa diklik untuk dibaca langsung.</p>
+    <p class="note">Bukan nasihat hukum. Jangan masukkan data pribadi (NIK, nomor HP, dll.): pertanyaan diproses layanan AI pihak ketiga.</p>
+    <div id="examples">
+      <button type="button" class="px-btn">Data pribadi apa aja yang dianggap sensitif?</button>
+      <button type="button" class="px-btn">Kalau data gua bocor, perusahaan wajib ngapain?</button>
+      <button type="button" class="px-btn">Apa sanksinya kalau jual beli data pribadi?</button>
+      <button type="button" class="px-btn">Boleh nggak data nasabah disimpan di server luar negeri?</button>
+    </div>
+  </section>
   <div id="log" aria-live="polite"></div>
-  <form id="form">
-    <label for="q" hidden>Pertanyaan</label>
-    <input id="q" autocomplete="off" maxlength="1000" placeholder="Tulis pertanyaan tentang data pribadi..." required>
-    <button>Kirim</button>
-  </form>
 </main>
+
+<div class="dock">
+  <form id="composer" class="composer">
+    <button type="button" class="collapsed" id="collapsed">Tanya soal UU PDP…</button>
+    <label for="q" class="sr-only">Pertanyaan</label>
+    <textarea id="q" rows="1" maxlength="1000" placeholder="Tanya soal UU PDP…"></textarea>
+    <div class="bar"><span class="tag">UU 27/2022</span><span class="tag">PP 33/2026</span></div>
+    <button type="submit" id="send" data-state="idle" aria-label="Kirim" disabled>
+      <svg class="px-icon i-send" width="16" height="16" viewBox="0 0 7 7" aria-hidden="true"><path fill="currentColor" d="M3 0h1v7H3zM2 1h1v1H2zM4 1h1v1H4zM1 2h1v1H1zM5 2h1v1H5zM0 3h1v1H0zM6 3h1v1H6z"/></svg>
+      <svg class="px-icon i-stop" width="14" height="14" viewBox="0 0 7 7" aria-hidden="true"><path fill="currentColor" d="M1 1h5v5H1z"/></svg>
+    </button>
+  </form>
+  <p class="hint">Enter untuk kirim · Shift+Enter untuk baris baru</p>
+</div>
+
+<dialog id="about" class="box" aria-labelledby="about-title">
+  <div class="inner">
+    <h2 id="about-title">Tentang project ini</h2>
+    <p>Chatbot <strong>RAG</strong> (<em>retrieval-augmented generation</em>) untuk memahami UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026. Dibuat sebagai project portofolio.</p>
+    <h3>Cara kerja</h3>
+    <ul>
+      <li>Teks resmi UU dan PP dipecah per pasal, lengkap dengan Penjelasannya.</li>
+      <li>Pertanyaan dicocokkan ke pasal yang paling relevan dengan embedding.</li>
+      <li>LLM menjawab hanya dari pasal-pasal itu, dan setiap sitasi dicek ulang. Sitasi yang tidak ada di sumber dicoret merah.</li>
+    </ul>
+    <h3>Seberapa akurat?</h3>
+    <p>Diuji dengan 50 pertanyaan berbahasa sehari-hari: pasal yang tepat masuk 8 besar hasil pencarian di 98% kasus, dan semua pertanyaan di luar topik ditolak.</p>
+    <h3>Privasi</h3>
+    <p>Percakapan tidak disimpan. Pertanyaan diproses oleh Google Gemini, jadi jangan masukkan data pribadi. Ini bukan nasihat hukum.</p>
+    <div class="actions">
+      <a class="px-btn" href="https://github.com/Sidqixx/rag-pdp-regulation" target="_blank" rel="noopener">Kode di GitHub</a>
+      <button type="button" class="px-btn" id="about-close">Tutup</button>
+    </div>
+  </div>
+</dialog>
+
 <script>
-const log = document.getElementById('log'), form = document.getElementById('form'), input = document.getElementById('q');
-const history = [];
-let n = 0;
+const $ = s => document.querySelector(s);
+const log = $('#log'), welcome = $('#welcome'), composer = $('#composer'), q = $('#q'), send = $('#send');
+let history = [], n = 0, busy = false, controller = null;
 
-const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = s => s.replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 
-// Sama dengan CITE di ragpdp/answer.py: "[UU 27/2022 Pasal 4 ayat (1)]" atau "Pasal 4 ayat (1) UU No. 27 Tahun 2022".
+// Citation parsing mirrors ragpdp/answer.py (CITE, split_groups) so the UI flags exactly what the checker flags.
 const DOC = String.raw`(UU(?: No\.?)? 27(?:\/| Tahun )2022|PP(?: No\.?)? 33(?:\/| Tahun )2026)`;
 const DETAIL = String.raw`(?: [Aa]yat \(\d+\))?(?: [Hh]uruf [a-z])?`;
 const CITE = String.raw`\[?${DOC} Pasal (\d+)${DETAIL}\]?|Pasal (\d+)${DETAIL} ${DOC}`;
 const citeLabel = (d1, n1, n2, d2) => `${(d1 || d2).startsWith('UU') ? 'UU 27/2022' : 'PP 33/2026'} Pasal ${n1 || n2}`;
 const cidOf = (id, label) => `${id}-${label.replace(/\W/g, '')}`;
+const splitGroups = t => t.replace(/\[(UU 27\/2022|PP 33\/2026) (Pasal [^\[\]]+)\]/g, (_, doc, inner) => {
+  const parts = [];
+  for (const p of inner.split(/,\s*|\s+dan\s+/)) {
+    if (p.startsWith('Pasal ') || !parts.length) parts.push(p);
+    else parts[parts.length - 1] += ' dan ' + p;  // "ayat (2)" belongs to the previous pasal
+  }
+  return parts.map(p => `[${doc} ${p}]`).join(' ');
+});
+
+// Minimal markdown for LLM answers: paragraphs, headings, bullet/numbered lists, bold, italic, code.
+// Input is already HTML-escaped, so nothing the model writes can inject markup.
+const inline = s => s
+  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  .replace(/(^|[\s(])\*(?!\s)([^*]+?)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>')
+  .replace(/`([^`]+)`/g, '<code>$1</code>');
+function md(src) {
+  let html = '', list = null, para = [];
+  const flush = () => { if (para.length) html += `<p>${para.map(inline).join('<br>')}</p>`; para = []; };
+  const close = () => { if (list) html += `</${list}>`; list = null; };
+  for (const line of src.split('\n')) {
+    let m;
+    if (!line.trim()) { flush(); close(); }
+    else if ((m = line.match(/^#{1,4}\s+(.*)/))) { flush(); close(); html += `<h3>${inline(m[1])}</h3>`; }
+    else if ((m = line.match(/^(\s*)([*\-•]|(\d+)[.)])\s+(.*)/))) {
+      flush();
+      const type = m[3] ? 'ol' : 'ul';
+      if (list !== type) { close(); html += `<${type}>`; list = type; }
+      const level = Math.min(Math.floor(m[1].length / 2), 2);
+      html += `<li class="lv${level}"${m[3] ? ` value="${m[3]}"` : ''}>${inline(m[4])}</li>`;
+    } else { close(); para.push(line.trim()); }
+  }
+  flush(); close();
+  return html;
+}
 
 function render(text, sources, id) {
-  const ok = new Set(sources.map(s => s.label));
-  return esc(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(new RegExp(CITE, 'g'), (m, d1, n1, n2, d2) => {
-      const l = citeLabel(d1, n1, n2, d2), shown = m.replace(/^\[|\]$/g, '');
-      return ok.has(l)
-        ? `<a class="cite" href="#${cidOf(id, l)}">${shown}</a>`
-        : `<span class="cite bad" title="Pasal ini tidak ada di sumber yang diambil, jangan dipercaya">${shown}</span>`;
-    });
+  const ok = new Set(sources.map(s => s.label)), chips = [];
+  const marked = esc(splitGroups(text)).replace(new RegExp(CITE, 'g'), (m, d1, n1, n2, d2) => {
+    const l = citeLabel(d1, n1, n2, d2), shown = m.replace(/^\[|\]$/g, '');
+    chips.push(ok.has(l)
+      ? `<a class="cite" href="#${cidOf(id, l)}">${shown}</a>`
+      : `<span class="cite bad" title="Pasal ini tidak ada di sumber yang diambil, jangan dipercaya">${shown}</span>`);
+    return `\u0001${chips.length - 1}\u0002`;  // placeholder so markdown never touches chip HTML
+  });
+  return md(marked).replace(/\u0001(\d+)\u0002/g, (_, i) => chips[i]);
 }
 
 function sourcesHtml(text, sources, id) {
-  const item = s => `<details id="${cidOf(id, s.label)}"><summary>${esc(s.label)} &middot; ${esc(s.bab)}</summary>` +
-    `<div>${esc(s.text)}</div>` + (s.penjelasan ? `<div class="pj">Penjelasan:\n${esc(s.penjelasan)}</div>` : '') + '</details>';
-  const citedSet = new Set([...text.matchAll(new RegExp(CITE, 'g'))].map(m => citeLabel(m[1], m[2], m[3], m[4])));
-  const cited = s => citedSet.has(s.label);
-  const used = sources.filter(cited), other = sources.filter(s => !cited(s));
+  const item = s => `<details id="${cidOf(id, s.label)}"><summary>${esc(s.label)} · ${esc(s.bab)}</summary>` +
+    `<div class="pasal">${esc(s.text)}</div>` +
+    (s.penjelasan ? `<div class="pasal pj">Penjelasan:\n${esc(s.penjelasan)}</div>` : '') + '</details>';
+  const cited = new Set([...splitGroups(text).matchAll(new RegExp(CITE, 'g'))].map(m => citeLabel(m[1], m[2], m[3], m[4])));
+  const used = sources.filter(s => cited.has(s.label)), other = sources.filter(s => !cited.has(s.label));
   return '<div class="sources">' +
     (used.length ? '<strong>Sumber</strong>' + used.map(item).join('') : '') +
     (other.length ? `<details><summary>Pasal lain yang ikut dibaca (${other.length})</summary>${other.map(item).join('')}</details>` : '') +
     '</div>';
 }
 
-function add(cls, text) {
+// Follow the stream only if the reader is already near the bottom.
+const nearBottom = () => innerHeight + scrollY >= document.documentElement.scrollHeight - 160;
+const toBottom = () => scrollTo({top: document.documentElement.scrollHeight});
+
+function addUser(text) {
   const el = document.createElement('div');
-  el.className = 'msg ' + cls;
+  el.className = 'msg user';
   el.textContent = text;
   log.append(el);
-  el.scrollIntoView({block: 'end'});
-  return el;
 }
 
-async function ask(q) {
-  add('user', q);
-  const id = 'm' + (n++), bot = add('bot', 'Mencari pasal...');
-  form.querySelector('button').disabled = true;
+function addBot() {
+  const el = document.createElement('article');
+  el.className = 'msg bot box';
+  el.innerHTML = '<div class="who"><svg class="px-icon" width="12" height="12" viewBox="0 0 10 10" aria-hidden="true"><path fill="currentColor" d="M3 0h4v1H3zM2 1h1v3H2zM7 1h1v3H7zM1 4h8v6H1z"/></svg>Asisten</div>' +
+    '<p class="status"><span class="label">Mencari pasal</span><span class="cursor"></span></p><div class="answer"></div>';
+  log.append(el);
+  return {status: el.querySelector('.status'), label: el.querySelector('.status .label'), answer: el.querySelector('.answer')};
+}
+
+function updateSend() {
+  const state = busy ? 'stop' : q.value.trim() ? 'send' : 'idle';
+  send.dataset.state = state;
+  send.disabled = state === 'idle';
+  send.setAttribute('aria-label', busy ? 'Hentikan jawaban' : 'Kirim');
+}
+
+function autosize() {
+  q.style.height = '0px';
+  q.style.height = Math.min(Math.max(q.scrollHeight, 64), 168) + 'px';
+  updateSend();
+}
+
+function setExpanded(on) {
+  composer.classList.toggle('expanded', on);
+  if (on) { q.focus(); autosize(); }
+}
+
+async function ask(question) {
+  welcome.hidden = true;
+  addUser(question);
+  const id = 'm' + (n++), bot = addBot();
+  toBottom();
+  busy = true; controller = new AbortController(); updateSend();
   let sources = [], text = '', buf = '';
   try {
-    const res = await fetch('/api/ask', {method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({question: q, history})});
-    if (res.status === 429) { bot.textContent = (await res.json()).detail; return; }
+    const res = await fetch('/api/ask', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question, history}), signal: controller.signal,
+    });
+    if (res.status === 429) { bot.answer.textContent = (await res.json()).detail; return; }
     if (!res.ok) throw new Error(res.status);
     const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
     for (let header = true;;) {
@@ -116,24 +361,65 @@ async function ask(q) {
         sources = JSON.parse(buf.slice(0, nl)).sources;
         text = buf.slice(nl + 1);
         header = false;
+        bot.label.textContent = 'Menulis jawaban';
       } else text += value;
-      bot.innerHTML = render(text, sources, id);
+      if (text) {
+        const follow = nearBottom();
+        bot.status.hidden = true;
+        bot.answer.innerHTML = render(text, sources, id);
+        if (follow) toBottom();
+      }
     }
-    bot.innerHTML = render(text, sources, id) + sourcesHtml(text, sources, id);
-    history.push({role: 'user', content: q}, {role: 'assistant', content: text});
+    bot.answer.innerHTML = render(text, sources, id) + sourcesHtml(text, sources, id);
+    history.push({role: 'user', content: question}, {role: 'assistant', content: text});
   } catch (e) {
-    bot.textContent = 'Maaf, terjadi kesalahan. Coba lagi sebentar lagi.';
+    if (e.name === 'AbortError') {
+      bot.answer.innerHTML = render(text, sources, id) + '<p class="stopped">Jawaban dihentikan.</p>' +
+        (sources.length ? sourcesHtml(text, sources, id) : '');
+    } else {
+      bot.answer.textContent = 'Maaf, terjadi kesalahan. Coba lagi sebentar lagi.';
+    }
   } finally {
-    form.querySelector('button').disabled = false;
+    bot.status.hidden = true;
+    busy = false; controller = null; updateSend();
   }
 }
 
+function submit() {
+  const question = q.value.trim();
+  if (!question || busy) return;
+  q.value = '';
+  autosize();
+  ask(question);
+}
+
+$('#collapsed').addEventListener('click', () => setExpanded(true));
+q.addEventListener('input', autosize);
+q.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); }
+  if (e.key === 'Escape' && !q.value.trim()) { q.blur(); setExpanded(false); }
+});
+composer.addEventListener('focusout', e => {
+  if (!composer.contains(e.relatedTarget) && !q.value.trim() && !busy) setExpanded(false);
+});
+composer.addEventListener('submit', e => { e.preventDefault(); busy ? controller.abort() : submit(); });
+
+document.querySelectorAll('#examples button').forEach(b => b.addEventListener('click', () => ask(b.textContent)));
 log.addEventListener('click', e => {
   const a = e.target.closest('a.cite');
-  if (a) document.querySelector(a.getAttribute('href'))?.setAttribute('open', '');
+  if (!a) return;
+  const d = document.querySelector(a.getAttribute('href'));
+  if (d) d.open = true;
 });
-form.addEventListener('submit', e => { e.preventDefault(); const q = input.value.trim(); input.value = ''; if (q) ask(q); });
-document.querySelectorAll('#examples button').forEach(b => b.addEventListener('click', () => ask(b.textContent)));
+$('#reset').addEventListener('click', () => {
+  controller?.abort();
+  history = []; log.innerHTML = ''; welcome.hidden = false;
+  scrollTo({top: 0});
+});
+const about = $('#about');
+$('#about-open').addEventListener('click', () => about.showModal());
+$('#about-close').addEventListener('click', () => about.close());
+about.addEventListener('click', e => { if (e.target === about) about.close(); });
 </script>
 </body>
 </html>

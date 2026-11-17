@@ -24,6 +24,11 @@ def test_reversed_citation_order_still_checked():
     assert invalid_citations(text, HITS) == ["UU 27/2022 Pasal 120"]
 
 
+def test_grouped_citations_each_checked():
+    text = "[UU 27/2022 Pasal 4, Pasal 57] dan [PP 33/2026 Pasal 6 ayat (1) dan ayat (2)]"
+    assert invalid_citations(text, HITS) == ["UU 27/2022 Pasal 57"]
+
+
 def test_status_pp_changes_when_in_force():
     assert "BELUM berlaku" in status_pp(date(2027, 1, 15))
     assert "BELUM" not in status_pp(date(2027, 1, 16))
