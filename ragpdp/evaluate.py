@@ -1,7 +1,8 @@
 """Measure quality using eval/questions.jsonl.
 
-python -m ragpdp.evaluate            # retrieval: recall@5 and MRR per method
-python -m ragpdp.evaluate --answers  # LLM answers: correct citations? refuses out-of-scope questions?
+python -m ragpdp.evaluate                    # retrieval: recall@5 and MRR per method
+python -m ragpdp.evaluate --min-recall 0.9   # same, but exit 1 if embedding recall@5 drops below 0.9 (used by CI)
+python -m ragpdp.evaluate --answers          # LLM answers: correct citations? refuses out-of-scope questions?
 """
 import json
 import re
@@ -19,7 +20,8 @@ def load_questions() -> list[dict]:
         return [json.loads(line) for line in f]
 
 
-def eval_retrieval(idx: Index, qs: list[dict]) -> None:
+def eval_retrieval(idx: Index, qs: list[dict]) -> float:
+    """Print the comparison table and return recall@5 of the embedding method (the one in production)."""
     qs = [q for q in qs if q["expected"]]  # out-of-scope questions have no correct answer
     print(f"{len(qs)} questions\n")
     print(f"| Method | recall@5 | recall@{K} | MRR |\n|---|---|---|---|")
@@ -39,6 +41,7 @@ def eval_retrieval(idx: Index, qs: list[dict]) -> None:
     print(f"\nComplete misses with embed (no correct pasal in top-{K}):")
     for m in misses:
         print(" -", m)
+    return r5 / n
 
 
 def eval_answers(idx: Index, qs: list[dict]) -> None:
@@ -74,4 +77,9 @@ def eval_answers(idx: Index, qs: list[dict]) -> None:
 
 if __name__ == "__main__":
     idx, qs = Index.load(), load_questions()
-    eval_answers(idx, qs) if "--answers" in sys.argv else eval_retrieval(idx, qs)
+    if "--answers" in sys.argv:
+        eval_answers(idx, qs)
+    else:
+        recall = eval_retrieval(idx, qs)
+        if "--min-recall" in sys.argv and recall < (floor := float(sys.argv[sys.argv.index("--min-recall") + 1])):
+            sys.exit(f"\nFAIL: embedding recall@5 {recall:.3f} is below {floor}")

@@ -3,9 +3,11 @@
 Run: uvicorn ragpdp.app:app --port 8000
 """
 import json
+import time
+from collections import defaultdict, deque
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from openai import RateLimitError
 from pydantic import BaseModel, Field
@@ -15,6 +17,28 @@ from ragpdp.retrieve import ROOT, Index
 
 app = FastAPI()
 idx = Index.load()
+
+# Per-visitor limit so one person cannot burn the shared free Gemini quota for everyone.
+# shortcut: in-memory and per server instance (Vercel may run several, and a cold start resets it);
+# move to a shared store such as Upstash Redis if real abuse shows up.
+LIMITS = ((60, 6), (24 * 3600, 40))  # (window in seconds, max questions per IP)
+_asked: dict[str, deque] = defaultdict(deque)
+
+
+def client_ip(request: Request) -> str:
+    # Vercel sets these headers itself, so clients cannot spoof them there.
+    forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    return request.headers.get("x-real-ip") or forwarded or (request.client.host if request.client else "unknown")
+
+
+def over_limit(ip: str) -> bool:
+    now, times = time.time(), _asked[ip]
+    while times and now - times[0] > LIMITS[-1][0]:
+        times.popleft()
+    if any(sum(now - t < window for t in times) >= limit for window, limit in LIMITS):
+        return True
+    times.append(now)
+    return False
 
 
 class Message(BaseModel):
@@ -28,7 +52,9 @@ class Ask(BaseModel):
 
 
 @app.post("/api/ask")
-def ask(req: Ask) -> StreamingResponse:
+def ask(req: Ask, request: Request) -> StreamingResponse:
+    if over_limit(client_ip(request)):
+        raise HTTPException(429, "Wah, kamu sudah bertanya cukup banyak nih. Istirahat sebentar, ya: coba lagi semenit lagi, atau besok kalau jatah harianmu sudah habis 🙏")
     history = [m.model_dump() for m in req.history[-4:]]  # last 2 turns are enough for follow-up questions
     try:
         hits, stream = answer(idx, req.question, history)

@@ -1,6 +1,6 @@
 # Tanya UU PDP
 
-**Live demo:** https://rag-pdp-regulation.vercel.app/
+**Live demo:** https://rag-pdp-regulation.vercel.app/ &nbsp; [![CI](https://github.com/Sidqixx/rag-pdp-regulation/actions/workflows/ci.yml/badge.svg)](https://github.com/Sidqixx/rag-pdp-regulation/actions/workflows/ci.yml)
 
 A RAG chatbot that helps laypeople understand Indonesia's personal data protection law: **UU 27/2022 (Pelindungan Data Pribadi)** and its implementing regulation **PP 33/2026**. Every answer cites the article (*pasal*) it is based on, and citations that do not appear in the retrieved sources are flagged automatically.
 
@@ -9,6 +9,22 @@ The UI and answers are in Indonesian, since the target users are Indonesian.
 > Not legal advice. Conversations are not stored. The online version sends questions to a third-party LLM API; for fully offline use, run the local version (Ollama).
 
 ## How it works
+
+```mermaid
+flowchart LR
+  subgraph Offline["Built once (python -m ragpdp.extract / parse)"]
+    A[Official PDFs<br/>UU 27/2022, PP 33/2026] --> B[Text<br/>pymupdf]
+    B --> C[301 chunks<br/>1 per pasal + Penjelasan + refs]
+    C --> D[Embedding cache<br/>data/emb-*.npy]
+  end
+  Q[Question] --> E[Embed question]
+  E --> F["Top 8 pasal (cosine)<br/>+ pasal named explicitly<br/>+ up to 3 referenced pasal"]
+  D --> F
+  F --> G[LLM answers only<br/>from these pasal]
+  G --> H{Citation check<br/>cited pasal in sources?}
+  H -->|yes| I[Clickable citation]
+  H -->|no| J[Struck through in red]
+```
 
 1. **Ingestion:** official PDFs → text (`pymupdf`) → one chunk per article, together with its official elucidation (*Penjelasan*) and the list of articles it references.
 2. **Retrieval:** embeddings + cosine similarity (clearly beats BM25 and hybrid in the evaluation below). Articles mentioned by number ("Pasal 57") are fetched directly, and articles referenced by the top hits are pulled in. Embeddings: `gemini-embedding-2` (online) or local `bge-m3` (offline).
@@ -81,6 +97,12 @@ Vercel runs the FastAPI app as-is (root `app.py` is the entrypoint) on the free 
 1. Push this repo to GitHub.
 2. In [Vercel](https://vercel.com/new), import the repository.
 3. Under **Environment Variables**, paste the contents of your `.env`, then **Deploy**.
+
+Each visitor (by IP) can ask 6 questions per minute and 40 per day, so one person cannot use up the shared free Gemini quota. The counter lives in memory per server instance, which is enough to stop casual spam but not a determined attacker.
+
+## Continuous integration
+
+GitHub Actions (`.github/workflows/ci.yml`) runs the unit tests on every push, then reruns the retrieval eval with the production embedding model and fails if recall@5 drops below 0.9. The eval job needs a `GEMINI_API_KEY` repository secret (**Settings → Secrets and variables → Actions**); without it, the job is skipped.
 
 ## Project layout
 
