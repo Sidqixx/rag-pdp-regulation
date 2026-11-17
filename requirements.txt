@@ -1,0 +1,7 @@
+fastapi>=0.115
+numpy>=2
+openai>=1.50
+pymupdf>=1.26
+pytest>=8
+rank-bm25>=0.2
+uvicorn>=0.30

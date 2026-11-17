@@ -1,0 +1,50 @@
+{"q": "Data pribadi apa saja yang termasuk kategori spesifik?", "expected": ["uu27:4", "pp33:6"], "note": "definisi, ada di UU dan PP"}
+{"q": "Kalau gua minta salinan data gua ke sebuah perusahaan, mereka wajib kasih paling lambat berapa lama?", "expected": ["uu27:32"], "note": "bahasa awam, tenggat 3x24 jam"}
+{"q": "Kapan PP 33 tahun 2026 mulai berlaku?", "expected": ["pp33:225"], "note": "berlaku 6 bulan setelah diundangkan 16 Juli 2026"}
+{"q": "Berapa tarif pajak penghasilan untuk freelancer?", "expected": [], "note": "di luar lingkup: bot harus menolak"}
+{"q": "Nama, agama, sama status kawin itu dianggap data pribadi biasa atau yang sensitif?", "expected": ["pp33:7", "uu27:4"], "note": "data pribadi umum: nama lengkap, jenis kelamin, kewarganegaraan, agama, dst."}
+{"q": "Sidik jari dan rekam medis aku termasuk data yang dilindungi khusus nggak?", "expected": ["uu27:4", "pp33:6"], "note": "data spesifik: kesehatan, biometrik, genetika, dst."}
+{"q": "Aku rekam video tetangga buat koleksi pribadi di HP, kena aturan PDP nggak?", "expected": ["pp33:3"], "note": "kegiatan pribadi/rumah tangga dikecualikan"}
+{"q": "Setelah gua minta koreksi data, perusahaannya punya waktu berapa lama buat benerin?", "expected": ["uu27:30", "pp33:71"], "note": "paling lambat 3x24 jam sejak menerima permintaan"}
+{"q": "Gimana caranya minta akun dan semua data gua dihapus permanen dari sebuah e-commerce?", "expected": ["uu27:8", "pp33:79"], "note": "hak mengakhiri pemrosesan, menghapus, memusnahkan"}
+{"q": "Kapan perusahaan wajib menghapus data pelanggan walaupun pelanggan nggak minta?", "expected": ["uu27:43", "pp33:82"], "note": "tidak lagi diperlukan, persetujuan ditarik, permintaan, diperoleh melawan hukum"}
+{"q": "Saya mau cabut izin aplikasi pakai data saya, emang boleh?", "expected": ["uu27:9", "pp33:90"], "note": "hak menarik kembali persetujuan"}
+{"q": "Kalau aku udah narik persetujuan, berapa lama aplikasinya harus berhenti ngolah data aku?", "expected": ["uu27:40", "pp33:92"], "note": "berhenti paling lambat 3x24 jam"}
+{"q": "Pengajuan kredit aku ditolak sama sistem AI tanpa ada manusia yang ngecek, bisa protes?", "expected": ["uu27:10", "pp33:93"], "note": "hak keberatan atas keputusan otomatis termasuk pemrofilan"}
+{"q": "Dalam kondisi apa perusahaan boleh menolak keberatan saya soal keputusan otomatis?", "expected": ["pp33:95"], "note": "tidak ada akibat hukum/dampak signifikan dan akurasi sistem sangat baik + mitigasi"}
+{"q": "Data gua bocor dan gua rugi, bisa nuntut ganti rugi ke perusahaannya?", "expected": ["uu27:12"], "note": "hak menggugat dan menerima ganti rugi"}
+{"q": "Kalau mau minta ganti rugi ke perusahaan, apa saja yang harus saya siapkan?", "expected": ["uu27:12", "pp33:106"], "note": "identitas, bukti, hubungan hukum; diajukan ke Pengendali"}
+{"q": "Bisa nggak aku minta data riwayat belanja aku dikirim ke marketplace lain?", "expected": ["uu27:13", "pp33:111"], "note": "hak portabilitas, format terbaca mesin, sistem interoperabel"}
+{"q": "Boleh minta mereka setop dulu pakai data aku sementara, tanpa dihapus?", "expected": ["uu27:11", "pp33:97"], "note": "hak menunda atau membatasi pemrosesan"}
+{"q": "Hak-hak pemilik data bisa dikecualikan dalam kondisi apa aja?", "expected": ["uu27:15", "pp33:148"], "note": "pertahanan, penegakan hukum, kepentingan umum, sektor keuangan, statistik/riset"}
+{"q": "Apa aja alasan sah perusahaan boleh ngolah data orang?", "expected": ["uu27:20"], "note": "6 dasar: persetujuan, perjanjian, kewajiban hukum, kepentingan vital, tugas publik, kepentingan sah"}
+{"q": "Persetujuan pakai data cukup dengan centang di aplikasi atau harus tanda tangan?", "expected": ["uu27:22"], "note": "tertulis atau terekam, elektronik/nonelektronik sama kuat"}
+{"q": "Kalau aku nggak mau kasih izin data buat promosi, apakah layanan ke aku boleh dikurangi?", "expected": ["pp33:35"], "note": "tetap dilayani, kualitas tidak dikurangi kecuali layanan butuh data"}
+{"q": "Aplikasi game anak saya minta data, perlu izin orang tua nggak?", "expected": ["uu27:25", "pp33:38"], "note": "wajib persetujuan orang tua/wali"}
+{"q": "Gimana aturan ngolah data penyandang disabilitas, misal tunanetra?", "expected": ["uu27:26", "pp33:39"], "note": "diselenggarakan khusus, komunikasi cara tertentu, persetujuan ybs/wali"}
+{"q": "Toko saya pasang CCTV yang ngadep ke jalan umum, apa aja aturannya?", "expected": ["uu27:17", "pp33:17"], "note": "tujuan keamanan/bencana/lalu lintas, tampilkan informasi, tidak untuk identifikasi"}
+{"q": "Stiker pemberitahuan ada CCTV itu harus berisi apa dan ditaruh di mana?", "expected": ["pp33:19"], "note": "info kamera beroperasi + narahubung, di pintu masuk/area terlihat"}
+{"q": "Akun gua kebobol hacker dari server sebuah startup, mereka wajib ngabarin gua kapan?", "expected": ["uu27:46", "pp33:114"], "note": "tertulis paling lambat 3x24 jam ke Subjek Data dan Lembaga"}
+{"q": "Kapan kebocoran data harus diumumin ke publik, bukan cuma ke korban?", "expected": ["pp33:115"], "note": "jika mengganggu pelayanan publik dan/atau berdampak serius ke masyarakat"}
+{"q": "Perusahaan fintech saya mau pakai teknologi scoring baru, harus bikin kajian risiko dulu?", "expected": ["uu27:34", "pp33:120"], "note": "DPIA wajib untuk risiko tinggi, termasuk penskoran & teknologi baru"}
+{"q": "Penilaian dampak privasi itu dilakukan sebelum atau sesudah sistem jalan?", "expected": ["pp33:121"], "note": "sebelum pemrosesan; ditinjau ulang jika risiko berubah"}
+{"q": "Perusahaan seperti apa yang wajib punya Data Protection Officer?", "expected": ["uu27:53", "pp33:142"], "note": "pelayanan publik, pemantauan skala besar, data spesifik skala besar"}
+{"q": "Tugas petugas pelindungan data di kantor itu ngapain aja?", "expected": ["uu27:54", "pp33:145"], "note": "memberi saran, memantau kepatuhan, koordinasi, dst."}
+{"q": "Vendor IT yang ngolah data klien kami boleh nyuruh subkontraktor lain?", "expected": ["uu27:51", "pp33:15"], "note": "boleh, wajib persetujuan tertulis Pengendali"}
+{"q": "Boleh nggak data nasabah disimpan di server luar negeri?", "expected": ["uu27:56", "pp33:165"], "note": "boleh jika negara tujuan setara/lebih tinggi, atau ada pelindungan mengikat, atau persetujuan"}
+{"q": "Sebelum kirim data ke luar negeri, perusahaan harus kasih tahu pemilik data nggak?", "expected": ["pp33:164"], "note": "wajib menyampaikan informasi sebelum transfer"}
+{"q": "Kalau perusahaan langgar UU PDP, sanksinya apa aja?", "expected": ["uu27:57"], "note": "peringatan, penghentian sementara, penghapusan data, denda administratif"}
+{"q": "Denda administratif maksimal buat perusahaan yang bocorin data berapa sih?", "expected": ["uu27:57", "pp33:185"], "note": "paling tinggi 2% pendapatan tahunan terhadap variabel pelanggaran"}
+{"q": "Orang yang jual-beli data KTP orang lain bisa dipenjara berapa tahun?", "expected": ["uu27:67"], "note": "memperoleh/menggunakan: max 5 thn/Rp5 M; mengungkapkan: max 4 thn/Rp4 M"}
+{"q": "Kalau yang melakukan kejahatan data itu perusahaan, hukumannya gimana?", "expected": ["uu27:70"], "note": "hanya denda, max 10x; pidana tambahan pembekuan, penutupan usaha dll"}
+{"q": "Bikin data pribadi palsu buat daftar pinjol ancaman pidananya apa?", "expected": ["uu27:68"], "note": "pemalsuan: penjara paling lama 6 tahun dan/atau denda"}
+{"q": "Siapa sebenarnya yang mengawasi pelaksanaan pelindungan data pribadi di Indonesia?", "expected": ["uu27:58", "pp33:180"], "note": "lembaga ditetapkan & bertanggung jawab kepada Presiden; berwenang mengawasi kepatuhan"}
+{"q": "Saya ada sengketa data sama perusahaan, bisa lapor ke lembaga PDP buat dimediasi?", "expected": ["uu27:64", "pp33:201", "pp33:206"], "note": "arbitrase/pengadilan/APS; lapor ke Lembaga, fasilitasi utamakan mediasi"}
+{"q": "Mediasi sengketa data pribadi paling lama berapa hari?", "expected": ["pp33:218"], "note": "30 hari sejak pertemuan pertama, dapat diperpanjang 1x maks 30 hari"}
+{"q": "Perusahaan dikasih waktu berapa lama buat menyesuaikan diri dengan UU PDP?", "expected": ["uu27:74"], "note": "paling lama 2 tahun sejak diundangkan"}
+{"q": "Selama Peraturan Lembaga belum terbit, pemrosesan data pakai acuan apa?", "expected": ["pp33:223"], "note": "boleh sepanjang tidak bertentangan dengan PP"}
+{"q": "Gimana cara bayar tilang elektronik yang ketangkep kamera ETLE?", "expected": [], "note": "di luar lingkup: tilang/lalu lintas"}
+{"q": "Syarat cerai di pengadilan agama apa aja ya?", "expected": [], "note": "di luar lingkup: perceraian"}
+{"q": "Harga bitcoin hari ini berapa?", "expected": [], "note": "di luar lingkup: harga kripto"}
+{"q": "Cara perpanjang paspor online gimana?", "expected": [], "note": "di luar lingkup: imigrasi"}
+{"q": "Berapa pesangon kalau kena PHK setelah kerja 5 tahun?", "expected": [], "note": "di luar lingkup: ketenagakerjaan"}
