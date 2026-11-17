@@ -5,8 +5,9 @@ Jalankan: uvicorn ragpdp.app:app --port 8000
 import json
 from typing import Literal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
+from openai import RateLimitError
 from pydantic import BaseModel, Field
 
 from ragpdp.answer import answer, label
@@ -29,7 +30,10 @@ class Ask(BaseModel):
 @app.post("/api/ask")
 def ask(req: Ask) -> StreamingResponse:
     history = [m.model_dump() for m in req.history[-4:]]  # 2 putaran terakhir cukup untuk pertanyaan lanjutan
-    hits, stream = answer(idx, req.question, history)
+    try:
+        hits, stream = answer(idx, req.question, history)
+    except RateLimitError:  # batas per menit atau per hari dari free tier
+        raise HTTPException(429, "Maaf, lagi banyak yang bertanya nih, jadi kuota AI gratisnya sedang habis. Coba lagi sekitar semenit lagi, ya. Kalau masih belum bisa, berarti jatah hari ini sudah habis dan besok siang bisa dipakai lagi 🙏")
     sources = [{"label": label(c), "bab": c["bab"], "text": c["text"], "penjelasan": c["penjelasan"]} for c in hits]
 
     def body():

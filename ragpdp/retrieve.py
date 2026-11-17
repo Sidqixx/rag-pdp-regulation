@@ -1,7 +1,6 @@
 """Step 3: cari pasal yang relevan.
 
-BM25 menangkap istilah hukum yang persis, embedding menangkap makna (bahasa awam).
-Keduanya digabung dengan Reciprocal Rank Fusion (RRF).
+Default: embedding (makna). BM25 (kata persis) dan hybrid (RRF) tetap ada untuk perbandingan di evaluate.py.
 """
 import hashlib
 import json
@@ -14,11 +13,20 @@ from openai import OpenAI
 from rank_bm25 import BM25Okapi
 
 ROOT = Path(__file__).resolve().parents[1]
-EMBED_MODEL = os.getenv("EMBED_MODEL", "bge-m3")
+
+# .env (tidak di-commit) berisi API key & pilihan provider. Env yang sudah di-set di terminal tetap menang.
+if (ROOT / ".env").exists():
+    for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
 # Ollama, Gemini, Groq, dll. sama-sama menyediakan API format OpenAI: ganti provider cukup lewat env.
-client = OpenAI(
-    base_url=os.getenv("OPENAI_BASE_URL", "http://localhost:11434/v1"),
-    api_key=os.getenv("OPENAI_API_KEY", "ollama"),
+# Embedding dan chat dikonfigurasi terpisah (lihat answer.py), jadi bisa beda provider.
+EMBED_MODEL = os.getenv("EMBED_MODEL", "bge-m3")
+embed_client = OpenAI(
+    base_url=os.getenv("EMBED_BASE_URL", "http://localhost:11434/v1"),
+    api_key=os.getenv("EMBED_API_KEY", "ollama"),
 )
 
 STOPWORDS = set(
@@ -43,7 +51,7 @@ def doc_text(c: dict) -> str:
 def embed(texts: list[str]) -> np.ndarray:
     vecs = []
     for i in range(0, len(texts), 32):
-        res = client.embeddings.create(model=EMBED_MODEL, input=texts[i : i + 32])
+        res = embed_client.embeddings.create(model=EMBED_MODEL, input=texts[i : i + 32])
         vecs += [d.embedding for d in res.data]
     v = np.array(vecs, dtype=np.float32)
     return v / np.linalg.norm(v, axis=1, keepdims=True)  # normalisasi -> dot product = cosine similarity

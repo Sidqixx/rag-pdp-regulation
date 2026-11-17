@@ -4,9 +4,16 @@ import re
 from collections.abc import Iterator
 from datetime import date
 
-from ragpdp.retrieve import Index, client
+from openai import OpenAI
+
+from ragpdp.retrieve import Index  # juga memuat .env
 
 CHAT_MODEL = os.getenv("CHAT_MODEL", "qwen3.5:4b")
+REASONING_EFFORT = os.getenv("CHAT_REASONING_EFFORT", "none")
+client = OpenAI(
+    base_url=os.getenv("CHAT_BASE_URL", "http://localhost:11434/v1"),
+    api_key=os.getenv("CHAT_API_KEY", "ollama"),
+)
 PP_BERLAKU = date(2027, 1, 16)  # PP 33/2026 Pasal 225: berlaku 6 bulan sejak diundangkan 16 Juli 2026
 _DOC = r"(UU(?: No\.?)? 27(?:/| Tahun )2022|PP(?: No\.?)? 33(?:/| Tahun )2026)"
 _DETAIL = r"(?i:(?: ayat \(\d+\))?(?: huruf [a-z])?)"
@@ -57,10 +64,10 @@ def answer(idx: Index, question: str, history: list[dict] = ()) -> tuple[list[di
         *history,
         {"role": "user", "content": f"KONTEKS (dicari otomatis oleh sistem, tidak terlihat oleh pengguna):\n{context(hits)}\n\nPERTANYAAN PENGGUNA: {question}"},
     ]
-    # reasoning_effort="none": matikan mode thinking qwen3.5 (lambat, tidak perlu untuk Q&A pendek).
-    # shortcut: tidak semua provider menerima "none"; kalau provider deploy menolak, hapus argumen ini.
+    # Thinking memperlambat tanpa banyak manfaat untuk Q&A pendek. Nilai terendah beda per provider:
+    # Ollama/qwen3.5 menerima "none", Gemini Flash-Lite menolak "none" dan memakai "minimal".
     stream = client.chat.completions.create(
-        model=CHAT_MODEL, messages=messages, stream=True, temperature=0.1, reasoning_effort="none"
+        model=CHAT_MODEL, messages=messages, stream=True, temperature=0.1, reasoning_effort=REASONING_EFFORT
     )
     return hits, (ch.choices[0].delta.content or "" for ch in stream if ch.choices)
 

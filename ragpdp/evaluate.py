@@ -6,8 +6,9 @@ python -m ragpdp.evaluate --answers  # jawaban LLM: sitasi benar? menolak pertan
 import json
 import re
 import sys
+import time
 
-from ragpdp.answer import CHAT_MODEL, answer, citations, invalid_citations
+from ragpdp.answer import CHAT_MODEL, answer, citations, client, invalid_citations
 from ragpdp.retrieve import ROOT, Index
 
 K = 8  # jumlah pasal yang dikirim ke LLM (Index.search)
@@ -46,6 +47,8 @@ def eval_answers(idx: Index, qs: list[dict]) -> None:
     inscope = [q for q in qs if q["expected"]]
     with out.open("w", encoding="utf-8") as f:
         for i, q in enumerate(qs, 1):
+            if "localhost" not in str(client.base_url):
+                time.sleep(7)  # free tier Gemini Flash-Lite: maks 10 request/menit
             hits, stream = answer(idx, q["q"])
             text = "".join(stream)
             cites = set(citations(text))

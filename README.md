@@ -8,7 +8,7 @@ Chatbot RAG yang membantu orang awam memahami **UU 27/2022 tentang Pelindungan D
 
 1. **Ingestion:** PDF resmi → teks (`pymupdf`) → 1 chunk per Pasal, lengkap dengan Penjelasan dan daftar pasal yang dirujuk.
 2. **Retrieval:** embedding `bge-m3` + cosine similarity (menang telak atas BM25 dan hybrid di eval, lihat tabel), pasal yang disebut eksplisit diambil langsung, lalu pasal yang dirujuk ikut ditarik.
-3. **Generation:** LLM lokal (`qwen3.5:4b` via Ollama) menjawab hanya dari pasal hasil retrieval, dengan format sitasi `[UU 27/2022 Pasal N]` yang dicek ulang di kode.
+3. **Generation:** LLM menjawab hanya dari pasal hasil retrieval, dengan format sitasi `[UU 27/2022 Pasal N]` yang dicek ulang di kode. Dua mode: **Gemini Flash-Lite** (API free tier, cepat) atau **qwen3.5:4b lokal via Ollama** (100% offline).
 4. **Evaluasi:** 50 pertanyaan berbahasa awam beserta pasal yang benar.
 
 ## Hasil evaluasi
@@ -27,15 +27,15 @@ Hybrid kalah dari embedding saja: pertanyaan orang awam jarang memakai kata yang
 
 **Jawaban** (`python -m ragpdp.evaluate --answers`):
 
-| Metrik | **qwen3.5:4b (dipakai)** | qwen3.5:2b |
-|---|---|---|
-| Jawaban dengan sitasi | 38/44 | 37/44 |
-| Menyitasi pasal yang benar | **35/44** | 27/44 |
-| Ada sitasi halusinasi (ditandai merah di UI) | **2/44** | 6/44 |
-| Menolak pertanyaan di luar lingkup | **6/6** | 2/6 |
-| Waktu sampai kata pertama (GTX 1650 4GB) | ±20–30 detik | ±7–12 detik |
+| Metrik | **Gemini 3.5 Flash-Lite (API)** | qwen3.5:4b (lokal) | qwen3.5:2b (lokal) |
+|---|---|---|---|
+| Jawaban dengan sitasi | **43/44** | 38/44 | 37/44 |
+| Menyitasi pasal yang benar | **41/44** | 35/44 | 27/44 |
+| Ada sitasi halusinasi (ditandai merah di UI) | **0/44** | 2/44 | 6/44 |
+| Menolak pertanyaan di luar lingkup | **6/6** | 6/6 | 2/6 |
+| Waktu jawaban lengkap | **±15 detik** | ±45–55 detik | ±20–25 detik |
 
-Angka 2b berasal dari prompt versi sebelumnya (dihitung ulang dengan pengecek sitasi yang sama). Hasil LLM bervariasi antar-run: run 4b sebelumnya mendapat 38/44 pasal benar tetapi 4/6 penolakan, jadi selisih ±3 pertanyaan masih dalam batas noise.
+Model lokal diukur di GTX 1650 4GB. Angka 2b berasal dari prompt versi sebelumnya (dihitung ulang dengan pengecek sitasi yang sama). Hasil LLM bervariasi antar-run: run 4b sebelumnya mendapat 38/44 pasal benar tetapi 4/6 penolakan, jadi selisih ±3 pertanyaan masih dalam batas noise.
 
 ## Menjalankan
 
@@ -61,7 +61,7 @@ python -m ragpdp.evaluate             # retrieval
 python -m ragpdp.evaluate --answers   # jawaban LLM (lama: ±50 jawaban)
 ```
 
-Ganti provider LLM (mis. API gratis untuk deploy) lewat env: `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `CHAT_MODEL`, `EMBED_MODEL`.
+Ganti provider (mis. Gemini free tier untuk deploy): salin `.env.example` jadi `.env` lalu isi API key. Chat (`CHAT_BASE_URL`, `CHAT_API_KEY`, `CHAT_MODEL`) dan embedding (`EMBED_BASE_URL`, `EMBED_API_KEY`, `EMBED_MODEL`) dikonfigurasi terpisah. `.env` tidak ikut di-commit.
 
 ## Struktur
 

@@ -103,6 +103,7 @@ async function ask(q) {
   try {
     const res = await fetch('/api/ask', {method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({question: q, history})});
+    if (res.status === 429) { bot.textContent = (await res.json()).detail; return; }
     if (!res.ok) throw new Error(res.status);
     const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
     for (let header = true;;) {
@@ -122,8 +123,9 @@ async function ask(q) {
     history.push({role: 'user', content: q}, {role: 'assistant', content: text});
   } catch (e) {
     bot.textContent = 'Maaf, terjadi kesalahan. Coba lagi sebentar lagi.';
+  } finally {
+    form.querySelector('button').disabled = false;
   }
-  form.querySelector('button').disabled = false;
 }
 
 log.addEventListener('click', e => {
