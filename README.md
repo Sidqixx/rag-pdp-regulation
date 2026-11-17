@@ -7,7 +7,7 @@ Chatbot RAG yang membantu orang awam memahami **UU 27/2022 tentang Pelindungan D
 ## Cara kerja
 
 1. **Ingestion:** PDF resmi → teks (`pymupdf`) → 1 chunk per Pasal, lengkap dengan Penjelasan dan daftar pasal yang dirujuk.
-2. **Retrieval:** embedding `bge-m3` + cosine similarity (menang telak atas BM25 dan hybrid di eval, lihat tabel), pasal yang disebut eksplisit diambil langsung, lalu pasal yang dirujuk ikut ditarik.
+2. **Retrieval:** embedding + cosine similarity (menang telak atas BM25 dan hybrid di eval, lihat tabel), pasal yang disebut eksplisit diambil langsung, lalu pasal yang dirujuk ikut ditarik. Embedding: `gemini-embedding-2` (online) atau `bge-m3` lokal (offline).
 3. **Generation:** LLM menjawab hanya dari pasal hasil retrieval, dengan format sitasi `[UU 27/2022 Pasal N]` yang dicek ulang di kode. Dua mode: **Gemini Flash-Lite** (API free tier, cepat) atau **qwen3.5:4b lokal via Ollama** (100% offline).
 4. **Evaluasi:** 50 pertanyaan berbahasa awam beserta pasal yang benar.
 
@@ -20,12 +20,14 @@ Chatbot RAG yang membantu orang awam memahami **UU 27/2022 tentang Pelindungan D
 | Metode | recall@5 | recall@8 | MRR |
 |---|---|---|---|
 | BM25 | 0.500 | 0.530 | 0.374 |
-| Hybrid (BM25 + embedding, RRF) | 0.686 | 0.754 | 0.599 |
-| **Embedding `bge-m3` (dipakai)** | **0.833** | **0.924** | **0.766** |
+| Hybrid (BM25 + bge-m3, RRF) | 0.686 | 0.754 | 0.599 |
+| Embedding `bge-m3` (lokal) | 0.833 | 0.924 | 0.766 |
+| Hybrid (BM25 + gemini-embedding-2, RRF) | 0.712 | 0.777 | 0.635 |
+| **Embedding `gemini-embedding-2` (online)** | **0.951** | **0.981** | **0.860** |
 
-Hybrid kalah dari embedding saja: pertanyaan orang awam jarang memakai kata yang sama dengan teks pasal, jadi BM25 malah menambah noise.
+Hybrid kalah dari embedding saja dengan kedua model: pertanyaan orang awam jarang memakai kata yang sama dengan teks pasal, jadi BM25 malah menambah noise.
 
-**Jawaban** (`python -m ragpdp.evaluate --answers`):
+**Jawaban** (`python -m ragpdp.evaluate --answers`, semuanya memakai retrieval `bge-m3`):
 
 | Metrik | **Gemini 3.5 Flash-Lite (API)** | qwen3.5:4b (lokal) | qwen3.5:2b (lokal) |
 |---|---|---|---|

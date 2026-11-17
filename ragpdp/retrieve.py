@@ -6,10 +6,12 @@ import hashlib
 import json
 import os
 import re
+import time
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from rank_bm25 import BM25Okapi
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,13 +50,26 @@ def doc_text(c: dict) -> str:
     return f"{c['source']} Pasal {c['pasal']} - {c['bab']}\n{c['text']}\nPenjelasan: {c['penjelasan']}"
 
 
-def embed(texts: list[str]) -> np.ndarray:
+def embed(texts: list[str], wait_on_limit: bool = False) -> np.ndarray:
     vecs = []
     for i in range(0, len(texts), 32):
-        res = embed_client.embeddings.create(model=EMBED_MODEL, input=texts[i : i + 32])
+        for attempt in range(6):
+            try:
+                res = embed_client.embeddings.create(model=EMBED_MODEL, input=texts[i : i + 32])
+                break
+            except RateLimitError:  # free tier Gemini: 100 teks/menit
+                if not wait_on_limit or attempt == 5:
+                    raise
+                time.sleep(20)
         vecs += [d.embedding for d in res.data]
     v = np.array(vecs, dtype=np.float32)
     return v / np.linalg.norm(v, axis=1, keepdims=True)  # normalisasi -> dot product = cosine similarity
+
+
+@lru_cache(maxsize=1024)
+def embed_query(query: str) -> np.ndarray:
+    """Pertanyaan yang sama tidak di-embed ulang (hemat kuota API, mis. di evaluate.py)."""
+    return embed([query])[0]
 
 
 class Index:
@@ -69,7 +84,7 @@ class Index:
         if cache.exists():
             self.emb = np.load(cache)
         else:
-            self.emb = embed(docs)
+            self.emb = embed(docs, wait_on_limit=True)  # 301 pasal sekaligus: bisa kena limit per menit
             np.save(cache, self.emb)
 
     @classmethod
@@ -82,7 +97,7 @@ class Index:
         if method == "bm25":
             return list(np.argsort(-self.bm25.get_scores(tokenize(query))))
         if method == "embed":
-            return list(np.argsort(-(self.emb @ embed([query])[0])))
+            return list(np.argsort(-(self.emb @ embed_query(query))))
         score = np.zeros(len(self.chunks))
         for m in ("bm25", "embed"):
             for r, i in enumerate(self.rank(query, m)):
