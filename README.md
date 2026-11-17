@@ -8,6 +8,10 @@ The UI and answers are in Indonesian, since the target users are Indonesian.
 
 > Not legal advice. Conversations are not stored. The online version sends questions to a third-party LLM API; for fully offline use, run the local version (Ollama).
 
+| Answer with clickable citations | Source articles (dark mode) |
+|---|---|
+| ![Answer with clickable citations](docs/img/answer-light.png) | ![Expanded source article with its elucidation](docs/img/sources-dark.png) |
+
 ## How it works
 
 ```mermaid
@@ -47,17 +51,29 @@ flowchart LR
 
 Hybrid search loses to pure embeddings with both models: laypeople rarely use the same words as the legal text, so BM25 mostly adds noise.
 
-**Answers** (`python -m ragpdp.evaluate --answers`, all runs used `bge-m3` retrieval):
+**Answers** (`python -m ragpdp.evaluate --answers`):
 
-| Metric | **Gemini 3.5 Flash-Lite (API)** | qwen3.5:4b (local) | qwen3.5:2b (local) |
-|---|---|---|---|
-| Answers with a citation | **43/44** | 38/44 | 37/44 |
-| Cites a correct article | **41/44** | 35/44 | 27/44 |
-| Contains a hallucinated citation (flagged red in the UI) | **0/44** | 2/44 | 6/44 |
-| Refuses out-of-scope questions | **6/6** | 6/6 | 2/6 |
-| Full answer time | **~15 s** | ~45–55 s | ~20–25 s |
+| Metric | **Production** (Gemini 3.5 Flash-Lite + gemini-embedding-2) | Gemini 3.5 Flash-Lite + bge-m3 | qwen3.5:4b + bge-m3 (local) | qwen3.5:2b + bge-m3 (local) |
+|---|---|---|---|---|
+| Answers with a citation | **42/44** | 43/44 | 38/44 | 37/44 |
+| Cites a correct article | **42/44** | 41/44 | 35/44 | 27/44 |
+| Contains a hallucinated citation (flagged red in the UI) | **0/44** | 0/44 | 2/44 | 6/44 |
+| Refuses out-of-scope questions | 5/6 | 6/6 | 6/6 | 2/6 |
+| Full answer time | ~15 s | ~15 s | ~45–55 s | ~20–25 s |
 
 Local models were measured on a GTX 1650 (4 GB). The 2b numbers come from an earlier prompt version (re-scored with the same citation checker). LLM output varies between runs: an earlier 4b run scored 38/44 correct articles but 4/6 refusals, so differences of about ±3 questions are within noise.
+
+### Failure analysis (production run)
+
+Retrieval is not the bottleneck: for all 44 answerable questions, a correct article is in the top 8. All three failures happen in generation.
+
+| Question | What went wrong | Cause | What changed |
+|---|---|---|---|
+| *Sidik jari dan rekam medis aku termasuk data yang dilindungi khusus nggak?* | Answer stopped mid-sentence ("…karena pem") before any citation | Generation: the provider ended the stream without a `finish_reason`. The correct articles were ranked 1st and 2nd, and the same prompt usually completes, so it is intermittent (about 4 of 70 streamed answers in follow-up testing) | When a stream ends without `finish_reason="stop"`, the server asks the model to continue, aligns the overlap so the text joins seamlessly (even mid-word), and only shows a "please ask again" notice if the continuation is cut off too (`resume_if_cut_off`, tested with real cut-offs) |
+| *Akun gua kebobol hacker dari server sebuah startup, mereka wajib ngabarin gua kapan?* | Same: cut off mid-sentence | Same as above (correct articles ranked 1st and 2nd) | Same fix |
+| *Gimana cara bayar tilang elektronik yang ketangkep kamera ETLE?* (out of scope) | Refused correctly, then added a note on CCTV rules citing UU 27/2022 Pasal 17 | Generation, borderline: the extra note is relevant (ETLE cameras are visual data processors) and correctly cited, but the metric counts any citation as "did not refuse" | Kept as is; the metric is deliberately strict |
+
+Earlier failures shaped the current design: the local qwen models wrote citations in formats the first checker missed (e.g. "Pasal 120 ayat (1) UU No. 27 Tahun 2022", an article that does not exist), so the checker now also parses reversed and grouped citations.
 
 ## Running locally
 

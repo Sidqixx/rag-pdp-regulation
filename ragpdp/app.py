@@ -72,4 +72,5 @@ def ask(req: Ask, request: Request) -> StreamingResponse:
 
 @app.get("/")
 def home() -> FileResponse:
-    return FileResponse(ROOT / "web/index.html")
+    # no-cache = revalidate every time, so visitors get the new UI right after a deploy.
+    return FileResponse(ROOT / "web/index.html", headers={"Cache-Control": "no-cache"})

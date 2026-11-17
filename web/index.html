@@ -235,7 +235,7 @@ const esc = s => s.replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&g
 
 // Citation parsing mirrors ragpdp/answer.py (CITE, split_groups) so the UI flags exactly what the checker flags.
 const DOC = String.raw`(UU(?: No\.?)? 27(?:\/| Tahun )2022|PP(?: No\.?)? 33(?:\/| Tahun )2026)`;
-const DETAIL = String.raw`(?: [Aa]yat \(\d+\))?(?: [Hh]uruf [a-z])?`;
+const DETAIL = String.raw`(?: [Aa]yat \(\d+\)(?:(?:,| dan) (?:[Aa]yat )?\(\d+\))*)?(?: [Hh]uruf [a-z])?`;
 const CITE = String.raw`\[?${DOC} Pasal (\d+)${DETAIL}\]?|Pasal (\d+)${DETAIL} ${DOC}`;
 const citeLabel = (d1, n1, n2, d2) => `${(d1 || d2).startsWith('UU') ? 'UU 27/2022' : 'PP 33/2026'} Pasal ${n1 || n2}`;
 const cidOf = (id, label) => `${id}-${label.replace(/\W/g, '')}`;

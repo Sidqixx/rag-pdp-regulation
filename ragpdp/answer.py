@@ -16,7 +16,7 @@ client = OpenAI(
 )
 PP_BERLAKU = date(2027, 1, 16)  # PP 33/2026 Pasal 225: in force 6 months after promulgation on 16 July 2026
 _DOC = r"(UU(?: No\.?)? 27(?:/| Tahun )2022|PP(?: No\.?)? 33(?:/| Tahun )2026)"
-_DETAIL = r"(?i:(?: ayat \(\d+\))?(?: huruf [a-z])?)"
+_DETAIL = r"(?i:(?: ayat \(\d+\)(?:(?:,| dan) (?:ayat )?\(\d+\))*)?(?: huruf [a-z])?)"  # "ayat (1) dan (2)"
 # Small models do not always follow the format: besides "[UU 27/2022 Pasal 4 ayat (1)]" they also write
 # "Pasal 4 ayat (1) UU No. 27 Tahun 2022". Both must be checked, otherwise hallucinations slip through.
 CITE = re.compile(rf"\[?{_DOC} Pasal (\d+){_DETAIL}\]?|Pasal (\d+){_DETAIL} {_DOC}")
@@ -85,10 +85,60 @@ def answer(idx: Index, question: str, history: list[dict] = ()) -> tuple[list[di
     ]
     # Thinking slows things down with little benefit for short Q&A. The lowest value differs per provider:
     # Ollama/qwen3.5 accepts "none", Gemini Flash-Lite rejects "none" and uses "minimal".
-    stream = client.chat.completions.create(
-        model=CHAT_MODEL, messages=messages, stream=True, temperature=0.1, reasoning_effort=REASONING_EFFORT
-    )
-    return hits, (ch.choices[0].delta.content or "" for ch in stream if ch.choices)
+    def create(msgs: list[dict]):
+        return client.chat.completions.create(
+            model=CHAT_MODEL, messages=msgs, stream=True, temperature=0.1, reasoning_effort=REASONING_EFFORT
+        )
+
+    # The first request is made here, not lazily, so app.py can turn a RateLimitError into a 429 before streaming.
+    return hits, resume_if_cut_off(create(messages), create, messages)
+
+
+CONTINUE = ("Jawabanmu terpotong. Lanjutkan: mulai dengan mengulang persis 3 sampai 5 kata terakhir yang sudah kamu tulis "
+            "(termasuk kata yang terpotong, tulis lengkap), lalu teruskan. Jangan mengulang bagian lain dan jangan menulis '...'.")
+CUTOFF_NOTICE = "\n\n*(Jawaban terpotong oleh layanan AI. Coba tanyakan sekali lagi.)*"
+
+
+def join_continuation(text: str, cont: str) -> str:
+    """Return the part of `cont` to append to `text`. The continuation starts by repeating the last few words,
+    so drop the longest part that overlaps: "harus memenuhi persyar" + "harus memenuhi persyaratan ..." -> "atan ..."."""
+    cont = cont.lstrip(".… ")
+    last = re.search(r"\S*$", text).group()
+    for k in range(min(len(text), len(cont), 300), 0, -1):
+        if text.endswith(cont[:k]) and (k >= 4 or k == len(last)):  # short overlaps must be a whole word
+            return cont[k:]
+    if text and not text[-1].isspace() and cont[:1].isalnum():  # nothing repeated: assume a word break
+        return " " + cont
+    return cont
+
+
+def resume_if_cut_off(stream, create, messages: list[dict], retries: int = 1) -> Iterator[str]:
+    """Yield answer text. Gemini sometimes ends a stream mid-sentence without finish_reason (about 4 in 70
+    answers in testing). Ask it to continue from where it stopped; if that fails too, tell the user."""
+    text = ""
+    for attempt in range(retries + 1):
+        if attempt:
+            stream = create([*messages, {"role": "assistant", "content": text}, {"role": "user", "content": CONTINUE}])
+        finish, head = None, ("" if attempt else None)  # head buffers the start of a continuation
+        for ch in stream:
+            if not ch.choices:
+                continue
+            finish = ch.choices[0].finish_reason or finish
+            piece = ch.choices[0].delta.content or ""
+            if head is not None:
+                head += piece
+                if len(head) < 300 and finish is None:  # the model may repeat a long phrase before going on
+                    continue
+                piece, head = join_continuation(text, head), None
+            text += piece
+            yield piece
+        if head:  # continuation ended while still buffering
+            piece = join_continuation(text, head)
+            text += piece
+            yield piece
+        if finish == "stop":
+            return
+    yield CUTOFF_NOTICE
 
 
 def citations(text: str) -> list[str]:
