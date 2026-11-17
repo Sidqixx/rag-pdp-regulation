@@ -65,12 +65,21 @@ python -m ragpdp.evaluate --answers   # jawaban LLM (lama: ±50 jawaban)
 
 Ganti provider (mis. Gemini free tier untuk deploy): salin `.env.example` jadi `.env` lalu isi API key. Chat (`CHAT_BASE_URL`, `CHAT_API_KEY`, `CHAT_MODEL`) dan embedding (`EMBED_BASE_URL`, `EMBED_API_KEY`, `EMBED_MODEL`) dikonfigurasi terpisah. `.env` tidak ikut di-commit.
 
+## Deploy gratis (Render)
+
+`render.yaml` mendefinisikan web service Python di free tier Render (512 MB RAM, tidur setelah 15 menit tanpa pengunjung, bangun lagi ±1 menit). Cache embedding (`data/emb-*.npy`) ikut di-commit, jadi server tidak perlu meng-embed 301 pasal saat start.
+
+1. Push repo ini ke GitHub.
+2. Di [dashboard Render](https://dashboard.render.com): **New → Blueprint**, pilih repo ini.
+3. Isi `CHAT_API_KEY` dan `EMBED_API_KEY` dengan API key Gemini (nilainya sama), lalu **Apply**.
+
 ## Struktur
 
 ```
 data/raw/          PDF resmi
 data/text/         hasil extract
 data/chunks.jsonl  1 baris = 1 pasal (+ penjelasan, rujukan)
+data/emb-*.npy     cache embedding per model
 ragpdp/            extract, parse, retrieve, answer, evaluate, app
 web/index.html     UI chat
 eval/              pertanyaan uji + jawaban model
