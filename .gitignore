@@ -2,3 +2,6 @@
 __pycache__/
 .pytest_cache/
 .env
+# Personal study notes, kept local
+docs/LEARNING.md
+docs/RECAP.md

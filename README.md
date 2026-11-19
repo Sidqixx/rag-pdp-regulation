@@ -131,5 +131,5 @@ data/emb-*.npy     embedding cache per model
 ragpdp/            extract, parse, retrieve, answer, evaluate, app
 web/index.html     chat UI
 eval/              test questions + model answers
-docs/LEARNING.md   study guide, design decisions, log (Indonesian)
+docs/img/          README screenshots
 ```
