@@ -59,7 +59,7 @@ def ask(req: Ask, request: Request) -> StreamingResponse:
     try:
         hits, stream = answer(idx, req.question, history)
     except RateLimitError:  # free-tier per-minute or per-day limit
-        raise HTTPException(429, "Kuota gratis Google Gemini untuk situs ini sedang habis, karena semua pengunjung memakai kuota yang sama. Coba lagi semenit lagi. Kalau masih gagal, jatah hari ini sudah habis dan terisi lagi besok siang 🙏")
+        raise HTTPException(429, "Kuota layanan AI gratis untuk situs ini sedang habis, karena dipakai bersama oleh semua pengunjung. Coba lagi semenit lagi. Kalau masih gagal, jatah hari ini sudah habis dan terisi lagi besok siang 🙏")
     sources = [{"label": label(c), "bab": c["bab"], "text": c["text"], "penjelasan": c["penjelasan"]} for c in hits]
 
     def body():

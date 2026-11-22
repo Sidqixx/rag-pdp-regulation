@@ -96,7 +96,7 @@ def answer(idx: Index, question: str, history: list[dict] = ()) -> tuple[list[di
 
 CONTINUE = ("Jawabanmu terpotong. Lanjutkan: mulai dengan mengulang persis 3 sampai 5 kata terakhir yang sudah kamu tulis "
             "(termasuk kata yang terpotong, tulis lengkap), lalu teruskan. Jangan mengulang bagian lain dan jangan menulis '...'.")
-CUTOFF_NOTICE = "\n\n*(Gemini berhenti di tengah jawaban. Kirim ulang pertanyaan untuk jawaban lengkap.)*"
+CUTOFF_NOTICE = "\n\n*(Jawaban terpotong oleh layanan AI. Kirim ulang pertanyaan untuk jawaban lengkap.)*"
 
 
 def join_continuation(text: str, cont: str) -> str:

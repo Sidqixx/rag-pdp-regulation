@@ -156,7 +156,7 @@
       <button type="button">Apa sanksinya kalau jual beli data pribadi?</button>
       <button type="button">Boleh nggak data nasabah disimpan di server luar negeri?</button>
     </div>
-    <p class="note">Google Gemini memproses setiap pertanyaan, jadi jangan tulis NIK, nomor HP, atau data pribadi lain. Jawaban di sini bukan nasihat hukum.</p>
+    <p class="note">Pertanyaan diproses oleh layanan AI pihak ketiga, jadi jangan tulis NIK, nomor HP, atau data pribadi lain. Jawaban di sini bukan nasihat hukum.</p>
   </section>
   <div id="log" aria-live="polite"></div>
 </main>
@@ -176,7 +176,7 @@
 <dialog id="about" aria-labelledby="about-title">
   <div class="inner">
     <div class="head"><span class="mark" aria-hidden="true"></span><h2 id="about-title">Tentang project ini</h2></div>
-    <p>Saya membuat chatbot <strong>RAG</strong> (<em>retrieval-augmented generation</em>) ini sebagai project portofolio, untuk membantu orang memahami UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026.</p>
+    <p>Chatbot <strong>RAG</strong> (<em>retrieval-augmented generation</em>) untuk membantu orang memahami UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026. Dibuat sebagai project portofolio.</p>
     <div class="stats">
       <div><b>301</b>pasal dari UU dan PP</div>
       <div><b>98%</b>pasal yang tepat ada di 8 hasil teratas</div>
@@ -184,13 +184,13 @@
     </div>
     <h3>Cara kerja</h3>
     <ul>
-      <li>Saya memecah teks resmi UU dan PP per pasal, lengkap dengan Penjelasannya.</li>
+      <li>Teks resmi UU dan PP dipecah per pasal, lengkap dengan Penjelasannya.</li>
       <li>Untuk tiap pertanyaan, sistem mencari pasal yang maknanya paling dekat lewat embedding.</li>
-      <li>Gemini menulis jawaban hanya dari pasal-pasal itu. Kode lalu memeriksa setiap pasal yang disebut, dan mencoret merah pasal yang tidak ada di hasil pencarian.</li>
+      <li>Model AI menulis jawaban hanya dari pasal-pasal itu. Sistem lalu memeriksa setiap pasal yang disebut, dan mencoret merah pasal yang tidak ada di hasil pencarian.</li>
     </ul>
-    <p>Angka di atas berasal dari 50 pertanyaan uji berbahasa sehari-hari. Saya mengecek manual pasal yang benar untuk setiap pertanyaan.</p>
+    <p>Angka di atas berasal dari 50 pertanyaan uji berbahasa sehari-hari, dengan pasal yang benar untuk tiap pertanyaan sudah dicek manual.</p>
     <h3>Privasi</h3>
-    <p>Server tidak menyimpan percakapan. Google Gemini memproses setiap pertanyaan, jadi jangan tulis data pribadi di sini.</p>
+    <p>Server tidak menyimpan percakapan. Pertanyaan diproses oleh layanan AI pihak ketiga, jadi jangan tulis data pribadi di sini.</p>
     <div class="row">
       <a class="btn" href="https://github.com/Sidqixx/rag-pdp-regulation" target="_blank" rel="noopener">Kode di GitHub</a>
       <button type="button" class="btn solid" id="about-close">Tutup</button>
