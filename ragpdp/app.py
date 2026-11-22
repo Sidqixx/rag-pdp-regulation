@@ -54,7 +54,7 @@ class Ask(BaseModel):
 @app.post("/api/ask")
 def ask(req: Ask, request: Request) -> StreamingResponse:
     if over_limit(client_ip(request)):
-        raise HTTPException(429, "Kamu sudah sampai batas: 6 pertanyaan per menit dan 40 per hari untuk tiap pengunjung. Tunggu semenit lalu coba lagi, ya. Kalau jatah hari ini sudah habis, besok kamu bisa bertanya lagi 🙏")
+        raise HTTPException(429, "Batas pertanyaan tercapai: 6 per menit dan 40 per hari untuk tiap pengunjung. Tunggu semenit lalu coba lagi, ya. Kalau jatah hari ini sudah habis, pertanyaan bisa dikirim lagi besok 🙏")
     history = [m.model_dump() for m in req.history[-4:]]  # last 2 turns are enough for follow-up questions
     try:
         hits, stream = answer(idx, req.question, history)
@@ -74,3 +74,8 @@ def ask(req: Ask, request: Request) -> StreamingResponse:
 def home() -> FileResponse:
     # no-cache = revalidate every time, so visitors get the new UI right after a deploy.
     return FileResponse(ROOT / "web/index.html", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/icon.png")
+def icon() -> FileResponse:
+    return FileResponse(ROOT / "web/icon.png")
