@@ -54,12 +54,12 @@ class Ask(BaseModel):
 @app.post("/api/ask")
 def ask(req: Ask, request: Request) -> StreamingResponse:
     if over_limit(client_ip(request)):
-        raise HTTPException(429, "Wah, kamu sudah bertanya cukup banyak nih. Istirahat sebentar, ya: coba lagi semenit lagi, atau besok kalau jatah harianmu sudah habis 🙏")
+        raise HTTPException(429, "Kamu sudah sampai batas: 6 pertanyaan per menit dan 40 per hari untuk tiap pengunjung. Tunggu semenit lalu coba lagi, ya. Kalau jatah hari ini sudah habis, besok kamu bisa bertanya lagi 🙏")
     history = [m.model_dump() for m in req.history[-4:]]  # last 2 turns are enough for follow-up questions
     try:
         hits, stream = answer(idx, req.question, history)
     except RateLimitError:  # free-tier per-minute or per-day limit
-        raise HTTPException(429, "Maaf, lagi banyak yang bertanya nih, jadi kuota AI gratisnya sedang habis. Coba lagi sekitar semenit lagi, ya. Kalau masih belum bisa, berarti jatah hari ini sudah habis dan besok siang bisa dipakai lagi 🙏")
+        raise HTTPException(429, "Kuota gratis Google Gemini untuk situs ini sedang habis, karena semua pengunjung memakai kuota yang sama. Coba lagi semenit lagi. Kalau masih gagal, jatah hari ini sudah habis dan terisi lagi besok siang 🙏")
     sources = [{"label": label(c), "bab": c["bab"], "text": c["text"], "penjelasan": c["penjelasan"]} for c in hits]
 
     def body():

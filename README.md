@@ -2,11 +2,11 @@
 
 **Live demo:** https://rag-pdp-regulation.vercel.app/ &nbsp; [![CI](https://github.com/Sidqixx/rag-pdp-regulation/actions/workflows/ci.yml/badge.svg)](https://github.com/Sidqixx/rag-pdp-regulation/actions/workflows/ci.yml)
 
-A RAG chatbot that helps laypeople understand Indonesia's personal data protection law: **UU 27/2022 (Pelindungan Data Pribadi)** and its implementing regulation **PP 33/2026**. Every answer cites the article (*pasal*) it is based on, and citations that do not appear in the retrieved sources are flagged automatically.
+A RAG chatbot that helps laypeople understand Indonesia's personal data protection law: **UU 27/2022 (Pelindungan Data Pribadi)** and its implementing regulation **PP 33/2026**. Every answer cites the article (*pasal*) it is based on, and the app strikes through any citation that is not among the retrieved articles.
 
-The UI and answers are in Indonesian, since the target users are Indonesian.
+The UI and answers are in Indonesian, because the people it is for read Indonesian.
 
-> Not legal advice. Conversations are not stored. The online version sends questions to a third-party LLM API; for fully offline use, run the local version (Ollama).
+> Not legal advice. The server does not store conversations. The online version sends each question to Google Gemini; to keep everything on your own machine, run the offline version with Ollama.
 
 | Answer with clickable citations | Source articles (dark mode) |
 |---|---|
@@ -30,14 +30,14 @@ flowchart LR
   H -->|no| J[Struck through in red]
 ```
 
-1. **Ingestion:** official PDFs → text (`pymupdf`) → one chunk per article, together with its official elucidation (*Penjelasan*) and the list of articles it references.
-2. **Retrieval:** embeddings + cosine similarity (clearly beats BM25 and hybrid in the evaluation below). Articles mentioned by number ("Pasal 57") are fetched directly, and articles referenced by the top hits are pulled in. Embeddings: `gemini-embedding-2` (online) or local `bge-m3` (offline).
-3. **Generation:** the LLM answers only from the retrieved articles, using a fixed citation format (`[UU 27/2022 Pasal N]`) that is verified in code. Two modes: **Gemini Flash-Lite** (free-tier API, fast) or **local qwen3.5:4b via Ollama** (fully offline).
+1. **Ingestion:** `extract.py` turns the official PDFs into text with `pymupdf`, and `parse.py` cuts it into one chunk per article, each with its official elucidation (*Penjelasan*) and the list of articles it references.
+2. **Retrieval:** `retrieve.py` ranks articles by cosine similarity between embeddings, which beat BM25 and hybrid search in the evaluation below. If a question names an article ("Pasal 57"), retrieval fetches it directly, and it pulls in up to 3 articles that the top hits reference. Embeddings: `gemini-embedding-2` (online) or local `bge-m3` (offline).
+3. **Generation:** the LLM answers only from the retrieved articles in a fixed citation format (`[UU 27/2022 Pasal N]`), and `answer.py` checks every citation against those articles. Two modes: **Gemini Flash-Lite** (free-tier API, about 15 s per answer) or **local qwen3.5:4b via Ollama** (fully offline).
 4. **Evaluation:** 50 questions written in everyday Indonesian, each labeled with the correct articles.
 
 ## Evaluation
 
-50 questions (44 answerable from UU/PP, 6 out of scope), see `eval/questions.jsonl`. The labels were reviewed manually.
+50 questions (44 answerable from UU/PP, 6 out of scope), see `eval/questions.jsonl`. I checked every label by hand.
 
 **Retrieval** (`python -m ragpdp.evaluate`):
 
@@ -59,9 +59,9 @@ Hybrid search loses to pure embeddings with both models: laypeople rarely use th
 | Cites a correct article | **42/44** | 41/44 | 35/44 | 27/44 |
 | Contains a hallucinated citation (flagged red in the UI) | **0/44** | 0/44 | 2/44 | 6/44 |
 | Refuses out-of-scope questions | 5/6 | 6/6 | 6/6 | 2/6 |
-| Full answer time | ~15 s | ~15 s | ~45–55 s | ~20–25 s |
+| Full answer time | ~15 s | ~15 s | 45 to 55 s | 20 to 25 s |
 
-Local models were measured on a GTX 1650 (4 GB). The 2b numbers come from an earlier prompt version (re-scored with the same citation checker). LLM output varies between runs: an earlier 4b run scored 38/44 correct articles but 4/6 refusals, so differences of about ±3 questions are within noise.
+I measured the local models on a GTX 1650 (4 GB). The 2b numbers come from an earlier prompt version, re-scored with the same citation checker. LLM output varies between runs: an earlier 4b run scored 38/44 correct articles but 4/6 refusals, so differences of about ±3 questions are within noise.
 
 ### Failure analysis (production run)
 
@@ -69,7 +69,7 @@ Retrieval is not the bottleneck: for all 44 answerable questions, a correct arti
 
 | Question | What went wrong | Cause | What changed |
 |---|---|---|---|
-| *Sidik jari dan rekam medis aku termasuk data yang dilindungi khusus nggak?* | Answer stopped mid-sentence ("…karena pem") before any citation | Generation: the provider ended the stream without a `finish_reason`. The correct articles were ranked 1st and 2nd, and the same prompt usually completes, so it is intermittent (about 4 of 70 streamed answers in follow-up testing) | When a stream ends without `finish_reason="stop"`, the server asks the model to continue, aligns the overlap so the text joins seamlessly (even mid-word), and only shows a "please ask again" notice if the continuation is cut off too (`resume_if_cut_off`, tested with real cut-offs) |
+| *Sidik jari dan rekam medis aku termasuk data yang dilindungi khusus nggak?* | Answer stopped mid-sentence ("…karena pem") before any citation | Gemini ended the stream without a `finish_reason`. Retrieval ranked the correct articles 1st and 2nd, and the same prompt usually completes, so the failure is intermittent (about 4 of 70 streamed answers in follow-up testing) | When a stream ends without `finish_reason="stop"`, the server asks the model to continue, matches the overlapping text so the two parts join without gaps or repeated words (even mid-word), and shows a "please ask again" notice only if the continuation is cut off too (`resume_if_cut_off`, tested with real cut-offs) |
 | *Akun gua kebobol hacker dari server sebuah startup, mereka wajib ngabarin gua kapan?* | Same: cut off mid-sentence | Same as above (correct articles ranked 1st and 2nd) | Same fix |
 | *Gimana cara bayar tilang elektronik yang ketangkep kamera ETLE?* (out of scope) | Refused correctly, then added a note on CCTV rules citing UU 27/2022 Pasal 17 | Generation, borderline: the extra note is relevant (ETLE cameras are visual data processors) and correctly cited, but the metric counts any citation as "did not refuse" | Kept as is; the metric is deliberately strict |
 
@@ -94,7 +94,7 @@ ollama pull bge-m3
 ollama pull qwen3.5:4b
 ```
 
-Set `OLLAMA_CONTEXT_LENGTH=8192` before starting Ollama. The default of 4096 is too small, and longer prompts get truncated silently.
+Set `OLLAMA_CONTEXT_LENGTH=8192` before starting Ollama. The default is 4096 tokens, and Ollama silently cuts prompts longer than that.
 
 Rebuilding the data and measuring:
 
@@ -108,7 +108,7 @@ python -m ragpdp.evaluate --answers   # LLM answers (slow: 50 answers)
 
 ## Deploying for free (Vercel)
 
-Vercel runs the FastAPI app as-is (root `app.py` is the entrypoint) on the free Hobby plan. The embedding cache (`data/emb-*.npy`) is committed, so the server never has to embed all 301 articles at startup.
+Vercel runs the FastAPI app as-is (root `app.py` is the entrypoint) on the free Hobby plan. The repo includes the embedding cache (`data/emb-*.npy`), so the server never has to embed all 301 articles at startup.
 
 1. Push this repo to GitHub.
 2. In [Vercel](https://vercel.com/new), import the repository.
@@ -118,7 +118,7 @@ Each visitor (by IP) can ask 6 questions per minute and 40 per day, so one perso
 
 ## Continuous integration
 
-GitHub Actions (`.github/workflows/ci.yml`) runs the unit tests on every push, then reruns the retrieval eval with the production embedding model and fails if recall@5 drops below 0.9. The eval job needs a `GEMINI_API_KEY` repository secret (**Settings → Secrets and variables → Actions**); without it, the job is skipped.
+GitHub Actions (`.github/workflows/ci.yml`) runs the unit tests on every push, then reruns the retrieval eval with the production embedding model and fails if recall@5 drops below 0.9. The eval job needs a `GEMINI_API_KEY` repository secret (**Settings → Secrets and variables → Actions**); without it, CI skips the job.
 
 ## Project layout
 

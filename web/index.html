@@ -147,15 +147,15 @@
 <main>
   <section id="welcome" class="welcome">
     <span class="mark lg" aria-hidden="true">§</span>
-    <h1>Tanya UU PDP</h1>
-    <p class="lead">Penjelasan UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026 dengan bahasa sederhana. Setiap jawaban menyebut pasal sumbernya, dan pasal itu bisa dibuka langsung.</p>
+    <h1>Tanya soal data pribadimu</h1>
+    <p class="lead">Asisten ini menjawab pertanyaan seputar UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026 dengan bahasa sehari-hari. Setiap jawaban menyebut pasal sumbernya, dan kamu bisa klik pasal itu untuk membaca teks aslinya.</p>
     <div id="examples">
       <button type="button">Data pribadi apa aja yang dianggap sensitif?</button>
       <button type="button">Kalau data gua bocor, perusahaan wajib ngapain?</button>
       <button type="button">Apa sanksinya kalau jual beli data pribadi?</button>
       <button type="button">Boleh nggak data nasabah disimpan di server luar negeri?</button>
     </div>
-    <p class="note">Bukan nasihat hukum. Jangan masukkan data pribadi (NIK, nomor HP, dll.): pertanyaan diproses layanan AI pihak ketiga.</p>
+    <p class="note">Google Gemini memproses pertanyaanmu, jadi jangan tulis NIK, nomor HP, atau data pribadi lain. Jawaban di sini bukan nasihat hukum.</p>
   </section>
   <div id="log" aria-live="polite"></div>
 </main>
@@ -175,20 +175,21 @@
 <dialog id="about" aria-labelledby="about-title">
   <div class="inner">
     <div class="head"><span class="mark" aria-hidden="true">§</span><h2 id="about-title">Tentang project ini</h2></div>
-    <p>Chatbot <strong>RAG</strong> (<em>retrieval-augmented generation</em>) untuk memahami UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026. Dibuat sebagai project portofolio.</p>
+    <p>Saya membuat chatbot <strong>RAG</strong> (<em>retrieval-augmented generation</em>) ini sebagai project portofolio, untuk membantu orang memahami UU 27/2022 tentang Pelindungan Data Pribadi dan PP 33/2026.</p>
     <div class="stats">
-      <div><b>301</b>pasal terindeks</div>
-      <div><b>98%</b>pasal tepat masuk 8 besar</div>
-      <div><b>0</b>sitasi palsu dari 44 uji</div>
+      <div><b>301</b>pasal dari UU dan PP</div>
+      <div><b>98%</b>pasal yang tepat ada di 8 hasil teratas</div>
+      <div><b>0</b>sitasi palsu di 44 jawaban uji</div>
     </div>
     <h3>Cara kerja</h3>
     <ul>
-      <li>Teks resmi UU dan PP dipecah per pasal, lengkap dengan Penjelasannya.</li>
-      <li>Pertanyaan dicocokkan ke pasal yang paling relevan dengan embedding.</li>
-      <li>LLM menjawab hanya dari pasal-pasal itu, dan setiap sitasi dicek ulang. Sitasi yang tidak ada di sumber dicoret merah.</li>
+      <li>Saya memecah teks resmi UU dan PP per pasal, lengkap dengan Penjelasannya.</li>
+      <li>Untuk tiap pertanyaan, sistem mencari pasal yang maknanya paling dekat lewat embedding.</li>
+      <li>Gemini menulis jawaban hanya dari pasal-pasal itu. Kode lalu memeriksa setiap pasal yang disebut, dan mencoret merah pasal yang tidak ada di hasil pencarian.</li>
     </ul>
+    <p>Angka di atas berasal dari 50 pertanyaan uji berbahasa sehari-hari. Saya mengecek manual pasal yang benar untuk setiap pertanyaan.</p>
     <h3>Privasi</h3>
-    <p>Percakapan tidak disimpan. Pertanyaan diproses oleh Google Gemini, jadi jangan masukkan data pribadi. Ini bukan nasihat hukum.</p>
+    <p>Server tidak menyimpan percakapan. Google Gemini memproses setiap pertanyaan, jadi jangan tulis data pribadi di sini.</p>
     <div class="row">
       <a class="btn" href="https://github.com/Sidqixx/rag-pdp-regulation" target="_blank" rel="noopener">Kode di GitHub</a>
       <button type="button" class="btn solid" id="about-close">Tutup</button>
@@ -344,10 +345,10 @@ async function ask(question) {
     history.push({role: 'user', content: question}, {role: 'assistant', content: text});
   } catch (e) {
     if (e.name === 'AbortError') {
-      bot.answer.innerHTML = render(text, sources, id) + '<p class="stopped">Jawaban dihentikan.</p>' +
+      bot.answer.innerHTML = render(text, sources, id) + '<p class="stopped">Kamu menghentikan jawaban ini.</p>' +
         (sources.length ? sourcesHtml(text, sources, id) : '');
     } else {
-      bot.answer.textContent = 'Maaf, terjadi kesalahan. Coba lagi sebentar lagi.';
+      bot.answer.textContent = 'Server belum bisa menjawab. Kirim ulang pertanyaanmu sebentar lagi.';
     }
   } finally {
     bot.status.hidden = true;
