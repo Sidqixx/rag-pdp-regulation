@@ -106,13 +106,9 @@ python -m ragpdp.evaluate             # retrieval
 python -m ragpdp.evaluate --answers   # LLM answers (slow: 50 answers)
 ```
 
-## Deploying for free (Vercel)
+## Production notes
 
-Vercel runs the FastAPI app as-is (root `app.py` is the entrypoint) on the free Hobby plan. The repo includes the embedding cache (`data/emb-*.npy`), so the server never has to embed all 301 articles at startup.
-
-1. Push this repo to GitHub.
-2. In [Vercel](https://vercel.com/new), import the repository.
-3. Under **Environment Variables**, paste the contents of your `.env`, then **Deploy**.
+The live demo runs on Vercel's free plan, with root `app.py` as the entrypoint. The repo includes the embedding cache (`data/emb-*.npy`), so the server never has to embed all 301 articles at startup.
 
 Each visitor (by IP) can ask 6 questions per minute and 40 per day, so one person cannot use up the shared free Gemini quota. The counter lives in memory per server instance, which is enough to stop casual spam but not a determined attacker.
 
