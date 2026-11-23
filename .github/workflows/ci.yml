@@ -13,7 +13,7 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
 
   # Guards retrieval quality: fails if a change to parsing, chunking or retrieval drops recall@5.

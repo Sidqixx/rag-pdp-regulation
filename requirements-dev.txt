@@ -1,0 +1,4 @@
+# Local development and CI: runtime deps plus PDF extraction and tests.
+-r requirements.txt
+pymupdf==2.1
+pytest==9.2.0
