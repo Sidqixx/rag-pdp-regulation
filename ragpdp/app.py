@@ -9,14 +9,32 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from openai import RateLimitError
 from pydantic import BaseModel, Field
 
 from ragpdp.answer import answer, label
 from ragpdp.retrieve import ROOT, Index
 
-app = FastAPI()
+# No auto-generated /docs or /openapi.json on the public site: the UI is the only client.
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 idx = Index.load()
+
+# Everything the page loads comes from this origin; style stays inline in index.html, scripts do not.
+SECURITY_HEADERS = {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; "
+    "font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.update(SECURITY_HEADERS)
+    return response
+
 
 # Per-visitor limit so one person cannot burn the shared free Gemini quota for everyone.
 # shortcut: in-memory and per server instance (Vercel may run several, and a cold start resets it);
@@ -76,6 +94,4 @@ def home() -> FileResponse:
     return FileResponse(ROOT / "web/index.html", headers={"Cache-Control": "no-cache"})
 
 
-@app.get("/icon.png")
-def icon() -> FileResponse:
-    return FileResponse(ROOT / "web/icon.png")
+app.mount("/assets", StaticFiles(directory=ROOT / "web/assets"), name="assets")
