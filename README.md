@@ -81,7 +81,7 @@ Requires Python 3.12+.
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .venv\Scripts\python.exe -m uvicorn ragpdp.app:app --port 8000   # open http://localhost:8000
 ```
 
@@ -116,6 +116,10 @@ Vercel runs the FastAPI app as-is (root `app.py` is the entrypoint) on the free 
 
 Each visitor (by IP) can ask 6 questions per minute and 40 per day, so one person cannot use up the shared free Gemini quota. The counter lives in memory per server instance, which is enough to stop casual spam but not a determined attacker.
 
+The page loads nothing from other origins (the font is self-hosted), and the server sends a strict Content-Security-Policy plus `nosniff` and `no-referrer` headers. FastAPI's auto-generated `/docs` and `/openapi.json` are turned off.
+
+`requirements.txt` pins the full runtime dependency tree, which is all Vercel installs. `requirements-dev.txt` adds PDF extraction and pytest for local work and CI.
+
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the unit tests on every push, then reruns the retrieval eval with the production embedding model and fails if recall@5 drops below 0.9. The eval job needs a `GEMINI_API_KEY` repository secret (**Settings → Secrets and variables → Actions**); without it, CI skips the job.
@@ -130,6 +134,14 @@ data/chunks.jsonl  one line = one article (+ elucidation, references)
 data/emb-*.npy     embedding cache per model
 ragpdp/            extract, parse, retrieve, answer, evaluate, app
 web/index.html     chat UI
+web/assets/        app.js, logo, self-hosted font
 eval/              test questions + model answers
 docs/img/          README screenshots
 ```
+
+## License and credits
+
+Code: [MIT](LICENSE). The UU and PP texts are official Indonesian government publications.
+
+- Font: [Plus Jakarta Sans](https://github.com/tokotype/PlusJakartaSans) by Tokotype, SIL Open Font License 1.1 (`web/assets/fonts/OFL.txt`).
+- Logo icon: from [Flaticon](https://www.flaticon.com/).
